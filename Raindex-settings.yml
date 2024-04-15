@@ -1,0 +1,33 @@
+networks: 
+  polygon: 
+    rpc: https://rpc.ankr.com/polygon 
+    chain-id: 137 
+    network-id: 137 
+    currency: MATIC
+  mainnet: 
+    rpc: https://1rpc.io/eth 
+    chain-id: 1 
+    network-id: 1 
+    currency: ETH
+  
+subgraphs:
+  polygon: https://api.thegraph.com/subgraphs/name/siddharth2207/rainlangpolygonob
+  mainnet: https://api.thegraph.com/subgraphs/name/siddharth2207/xblock
+
+orderbooks:
+  polygon:
+    address: 0xc95A5f8eFe14d7a20BD2E5BAFEC4E71f8Ce0B9A6
+    network: polygon
+    subgraph: polygon
+  mainnet:
+    address: 0xf1224A483ad7F1E9aA46A8CE41229F32d7549A74
+    network: mainnet
+    subgraph: mainnet
+
+deployers:
+  polygon:
+    address: 0xF77b3c3f61af5a3cE7f7CE3cfFc117491104432E
+    network: polygon
+  mainnet:
+    address: 0x4D69ec4d0112E42c385B5cCb6897cCdfeAfC3136
+    network: mainnet

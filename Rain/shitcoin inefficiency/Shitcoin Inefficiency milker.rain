@@ -1,0 +1,313 @@
+---
+/* Shitcoin Inefficiency Milker - Long only */
+
+/* Set up */
+wallet_address : 0x
+Base_Token : 0x,       /* Shitcoin */
+Quote_Token : 0x,      /* EG USD, WETH */
+Base_TokenD: XX,
+Quote_TokenD: XX,
+Poolfee: X,
+Upper_distance : 0.05,
+Lower_distance : 0.05;
+
+/* Obtain Averages */
+/* 0 */
+Long_TWAP_L : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <0> <10> <poolfee>),
+Long_TWAP_S : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <0> <5> <poolfee>),
+Short_TWAP_L : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <0> <2> <poolfee>),
+Short_TWAP_S : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <0> <1> <poolfee>);
+/* 1 */
+Long_TWAP_L_1 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <1> <11> <poolfee>),
+Long_TWAP_S_1 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <1> <6> <poolfee>),
+Short_TWAP_S_1 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <1> <2> <poolfee>);
+/* 2 */
+Long_TWAP_L_2 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <2> <12> <poolfee>),
+Long_TWAP_S_2 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <2> <7> <poolfee>),
+Short_TWAP_S_2 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <2> <3> <poolfee>);
+/* 3 */
+Long_TWAP_L_3 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <3> <13> <poolfee>),
+Long_TWAP_S_3 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <3> <8> <poolfee>),
+Short_TWAP_S_3 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <3> <4> <poolfee>);
+/* 4 */
+Long_TWAP_L_4 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <4> <14> <poolfee>),
+Long_TWAP_S_4 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <4> <9> <poolfee>),
+Short_TWAP_S_4 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <4> <5> <poolfee>);
+/* 5 */
+Long_TWAP_L_5 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <5> <15> <poolfee>),
+Long_TWAP_S_5 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <5> <10> <poolfee>),
+Short_TWAP_S_5 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <5> <6> <poolfee>);
+/* 6 */
+Long_TWAP_L_6 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <6> <16> <poolfee>),
+Long_TWAP_S_6 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <6> <11> <poolfee>),
+Short_TWAP_S_6 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <6> <7> <poolfee>);
+/* 7 */
+Long_TWAP_L_7 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <7> <17> <poolfee>),
+Long_TWAP_S_7 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <7> <12> <poolfee>),
+Short_TWAP_S_7 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <7> <8> <poolfee>);
+/* 8 */
+Long_TWAP_L_8 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <8> <18> <poolfee>),
+Long_TWAP_S_8 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <8> <13> <poolfee>),
+Short_TWAP_S_8 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <8> <9> <poolfee>);
+/* 9 */
+Long_TWAP_L_9 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <9> <19> <poolfee>),
+Long_TWAP_S_9 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <9> <14> <poolfee>),
+Short_TWAP_S_9 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <9> <10> <poolfee>);
+/* 10 */
+Long_TWAP_L_10 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <10> <20> <poolfee>),
+Long_TWAP_S_10 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <10> <15> <poolfee>),
+Short_TWAP_S_10 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <10> <11> <poolfee>);
+
+/* Calculate distances */
+/* 0 */
+Trend_distance : Long_TWAP_S - Long_TWAP_L,
+Price_distance : Short_TWAP_S - Long_TWAP_L,
+Standardised_distance : Price_distance - Trend_distance;
+/* 1 */
+Trend_distance_1 : Long_TWAP_S_1 - Long_TWAP_L_1,
+Price_distance_1 : Short_TWAP_S_1 - Long_TWAP_L_1,
+Standardised_distance_1 : Price_distance_1 - Trend_distance_1;
+/* 2 */
+Trend_distance_2 : Long_TWAP_S_2 - Long_TWAP_L_2,
+Price_distance_2 : Short_TWAP_S_2 - Long_TWAP_L_2,
+Standardised_distance_2 : Price_distance_2 - Trend_distance_2;
+/* 3 */
+Trend_distance_3 : Long_TWAP_S_3 - Long_TWAP_L_3,
+Price_distance_3 : Short_TWAP_S_3 - Long_TWAP_L_3,
+Standardised_distance_3 : Price_distance_3 - Trend_distance_3;
+/* 4 */
+Trend_distance_4 : Long_TWAP_S_4 - Long_TWAP_L_4,
+Price_distance_4 : Short_TWAP_S_4 - Long_TWAP_L_4,
+Standardised_distance_4 : Price_distance_4 - Trend_distance_4;
+/* 5 */
+Trend_distance_5 : Long_TWAP_S_5 - Long_TWAP_L_5,
+Price_distance_5 : Short_TWAP_S_5 - Long_TWAP_L_5,
+Standardised_distance_5 : Price_distance_5 - Trend_distance_5;
+/* 6 */
+Trend_distance_6 : Long_TWAP_S_6 - Long_TWAP_L_6,
+Price_distance_6 : Short_TWAP_S_6 - Long_TWAP_L_6,
+Standardised_distance_6 : Price_distance_6 - Trend_distance_6;
+/* 7 */
+Trend_distance_7 : Long_TWAP_S_7 - Long_TWAP_L_7,
+Price_distance_7 : Short_TWAP_S_7 - Long_TWAP_L_7,
+Standardised_distance_7 : Price_distance_7 - Trend_distance_7;
+/* 8 */
+Trend_distance_8 : Long_TWAP_S_8 - Long_TWAP_L_8,
+Price_distance_8 : Short_TWAP_S_8 - Long_TWAP_L_8,
+Standardised_distance_8 : Price_distance_8 - Trend_distance_8;
+/* 9 */
+Trend_distance_9 : Long_TWAP_S_9 - Long_TWAP_L_9,
+Price_distance_9 : Short_TWAP_S_9 - Long_TWAP_L_9,
+Standardised_distance_9 : Price_distance_9 - Trend_distance_9;
+/* 10 */
+Trend_distance_10 : Long_TWAP_S_10 - Long_TWAP_L_10,
+Price_distance_10 : Short_TWAP_S_10 - Long_TWAP_L_10,
+Standardised_distance_10 : Price_distance_10 - Trend_distance_10;
+
+/* obtaining prev closes */
+prev_close_1 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <1> <2> <poolfee>),
+prev_close_2 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <2> <3> <poolfee>),
+prev_close_3 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <3> <4> <poolfee>),
+prev_close_4 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <4> <5> <poolfee>);
+prev_close_5 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <5> <6> <poolfee>);
+prev_close_6 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <6> <7> <poolfee>);
+prev_close_7 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <7> <8> <poolfee>);
+prev_close_8 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <8> <9> <poolfee>);
+prev_close_9 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <9> <10> <poolfee>);
+prev_close_10 : uniswap-v3-twap(<QuoteToken> <QuoteTokenD> <BaseToken> <BaseTokenD> <10> <11> <poolfee>);
+
+/* Calculate upper and lower boundaries with prev closes*/
+/* 1 */
+prev_close_1 : Short_TWAP_S_1,
+prev_close_U_1 : prev_close_1 * Upper_distance,
+prev_close_L_1 : -prev_close_1 * Lower_distance; 
+/* 2 */
+prev_close_2 : Short_TWAP_S_2,
+prev_close_U_2 : prev_close_2 * Upper_distance,
+prev_close_L_2 : -prev_close_2 * Lower_distance; 
+/* 3 */
+prev_close_3 : Short_TWAP_S_3,
+prev_close_U_3 : prev_close_3 * Upper_distance,
+prev_close_L_3 : -prev_close_3 * Lower_distance; 
+/* 4 */
+prev_close_4 : Short_TWAP_S_4,
+prev_close_U_4 : prev_close_4 * Upper_distance,
+prev_close_L_4 : -prev_close_4 * Lower_distance; 
+/* 5 */
+prev_close_5 : Short_TWAP_S_5,
+prev_close_U_5 : prev_close_5 * Upper_distance,
+prev_close_L_5 : -prev_close_5 * Lower_distance; 
+/* 6 */
+prev_close_6 : Short_TWAP_S_6,
+prev_close_U_6 : prev_close_6 * Upper_distance,
+prev_close_L_6 : -prev_close_6 * Lower_distance; 
+/* 7 */
+prev_close_7 : Short_TWAP_S_7,
+prev_close_U_7 : prev_close_7 * Upper_distance,
+prev_close_L_7 : -prev_close_7 * Lower_distance; 
+/* 8 */
+prev_close_8 : Short_TWAP_S_8,
+prev_close_U_8 : prev_close_8 * Upper_distance,
+prev_close_L_8 : -prev_close_8 * Lower_distance; 
+/* 9 */
+prev_close_9 : Short_TWAP_S_9,
+prev_close_U_9 : prev_close_9 * Upper_distance,
+prev_close_L_9 : -prev_close_9 * Lower_distance; 
+/* 10 */
+prev_close_10 : Short_TWAP_S_10,
+prev_close_U_10 : prev_close_10 * Upper_distance,
+prev_close_L_10 : -prev_close_10 * Lower_distance;
+
+/* No for loops atm so use expressions, write out each twap and test */
+/* Entry Condition for opening position */ 
+#LongCondition
+  standardised_distance_n, prev_close_L_n:,
+  result: if(every(less-than(standardised_distance_n lower_bound_n) greater-than(Short_TWAP_S Short_TWAP_L))1 0);
+
+call1_L: call<'LongCondition>(Standardised_distance, prev_close_L_1),
+call2_L: call<'LongCondition>(Standardised_distance_1, prev_close_L_2),
+call3_L: call<'LongCondition>(Standardised_distance_2, prev_close_L_3),
+call4_L: call<'LongCondition>(Standardised_distance_3, prev_close_L_4);
+
+enterlong : if(any(equal(call1 1) equal(call2 1) equal(call3 1) equal(call4 1)) 1 0);
+
+/* Entry Condition saftey guard from expansions retreats */ 
+/* The guard requires calculating if the standardised distance has exceeded the upper limit in the last 10 bars */
+#GuardCondition 
+  Standardised_distance_n, prev_close_U_n:,
+  result: if(greater-than(Standardised_distance_n prev_close_U_n) 1 0)
+
+call1_G: call<'GuardCondition>(Standardised_distance_0 prev_close_U_1),
+call2_G: call<'GuardCondition>(Standardised_distance_1 prev_close_U_2),
+call3_G: call<'GuardCondition>(Standardised_distance_2 prev_close_U_3),
+call4_G: call<'GuardCondition>(Standardised_distance_3 prev_close_U_4),
+call5_G: call<'GuardCondition>(Standardised_distance_4 prev_close_U_5),
+call6_G: call<'GuardCondition>(Standardised_distance_5 prev_close_U_6),
+call7_G: call<'GuardCondition>(Standardised_distance_6 prev_close_U_7),
+call8_G: call<'GuardCondition>(Standardised_distance_7 prev_close_U_8),
+call9_G: call<'GuardCondition>(Standardised_distance_8 prev_close_U_9),
+call10_G: call<'GuardCondition>(Standardised_distance_9 prev_close_U_10);
+/* if the guard is true/on/1 then you do not want to trade */
+GuardCondition : if(any(equal(call1_G 1) equal(call2_G 1) equal(call3_G 1) equal(call4_G 1) equal(call5_G 1) equal(call6_G 1) equal(call7_G 1) equal(call8_G 1) equal(call9_G 1) equal(call10_G 1))1 0);
+
+/* memory */
+is_long: 0,
+entry_price: 0,
+SL_value: mul(entry_price 0.96);
+
+/* contexts */ 
+solver_input: /* context_aliases */
+solver_output:  /* context_aliases */
+
+/* Quote token = WETH, USDT. Base token = shitcoin */
+buy_contexts:if(every(
+  equal-to(solver_input Quote_token)
+  equal-to(solver_output Base_token))),
+sell_contexts:if(every(
+  equal-to(solver_input Base_token)
+  equal-to(solver_output Quote_token))),
+
+/* trade conditions */
+longcondition: if(every(
+  equal-to(buy_contexts 1)
+  is-zero(get(is_long)) 
+  equal-to(enterlong 1) 
+  is-zero(GuardCondition))),
+TP_condition: if(every(
+  equal-to(sell_contexts 1)
+  equal-to(get(is_long) 1) 
+  less-than(Long_TWAP_S Long_TWAP_L))),
+SL_condition: if(every(
+  equal-to(sell_contexts 1)
+  equal-to(get(is_long) 1) 
+  less-than(/*uniswap_currentprice_word*/ SL_value)));
+
+/* handle amount */
+Amount:if(equal-to(longcondition 1) /*25 USDT or whatever WETH*/ erc20balanceof(Base_token my_vault_address)
+Price:if(
+  equal-to(longcondition 1) 
+  /*method for market buy */ 
+  if(
+    equal-to(TP_condition 1) 
+    /*method for market buy */ 
+    if(equal-to(SL_condition 1)
+    /*method for market sell*/ 
+    /*else nothing */)))
+
+
+/* 
+//@version=5
+strategy("Shitcoin Inefficiency Milker - Long only")
+
+// Calculate moving averages
+Long_TWAP_L = ta.sma(close, 10)
+Long_TWAP_S = ta.sma(close, 5)
+Short_TWAP_L = ta.sma(close, 2)
+Short_TWAP_S = ta.sma(close, 1)
+
+// Calculate distances V1
+//Trend_distance = Long_TWAP_S - Long_TWAP_L
+//Price_distance = Short_TWAP_S - Long_TWAP_S
+
+// Calculate standardized distance
+//standardised_distance = Price_distance - Trend_distance
+
+// Calculate distances V2
+Trend_distance = Long_TWAP_S - Long_TWAP_L
+Price_distance = Short_TWAP_S - Long_TWAP_L
+
+// Calculate standardized distance
+standardised_distance = Price_distance - Trend_distance
+
+// Calculate upper and lower boundaries
+prev_close = close[1]
+prev_close_10U = prev_close * 0.01 // Upper boundary
+prev_close_10L = -prev_close * 0.01 // Lower boundary
+
+// Plotting histogram and boundaries
+plot(standardised_distance, color=color.new(#ff52f6, 70), title="Standardized Distance", style=plot.style_histogram, linewidth=2)
+plot(prev_close_10U, color=color.rgb(82, 99, 255, 47), title="Upper Boundary", style=plot.style_line, linewidth=2)
+plot(prev_close_10L, color=color.rgb(82, 99, 255, 47), title="Lower Boundary", style=plot.style_line, linewidth=2)
+
+// Entry condition for opening long position
+longcondition = false
+for i = 1 to 4
+    if standardised_distance[i] <= prev_close_10L[i]
+        longcondition := true
+for i = 1 to 10
+    if standardised_distance[i] >= prev_close_10U[i]
+        longcondition := false
+
+enterLong = longcondition and (Short_TWAP_S > Short_TWAP_L)
+
+// Define stop loss price
+var float stopLossPrice = na
+
+// Open long position if entry condition met
+if enterLong
+    strategy.entry("Long", strategy.long)
+    stopLossPrice := close // Assign stopLossPrice to current close when entering long
+
+// Increment bars since entry
+var int bars_since_entry = na
+bars_since_entry := na(bars_since_entry) ? 0 : bars_since_entry + 1
+
+// Reset bars since entry on entry
+bars_since_entry := enterLong ? 0 : bars_since_entry
+
+// Exit conditions for taking profit and stopping losses
+exitTakeProfit = Long_TWAP_S < Long_TWAP_L and bars_since_entry >= 10
+exitStopLoss = close < (stopLossPrice * 0.96) // Close position if the price drops 4% from entry
+
+// Close position if exit conditions met
+if exitTakeProfit or exitStopLoss
+    strategy.close("Long")
+    longcondition := false
+
+
+
+
+
+
+
+

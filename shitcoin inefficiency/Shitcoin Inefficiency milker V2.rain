@@ -10,9 +10,9 @@ QuoteToken: 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1,      /* WETH */
 BaseTokenD: 18,
 QuoteTokenD: 18,
 Poolfee: [uniswap-v3-fee-medium],
-Boundary 0.05,
-Buy_volume: 0.08, /* WETH */
-second_interval: 60;
+Boundary: 5e16, /*0.05*/
+Buy_volume: 8e16, /* WETH 0.08 */
+second_interval: 60; /*60*/
 
 #Now_price 
 Current_price : uniswap-v3-twap-output-ratio(QuoteToken QuoteTokenD BaseToken BaseTokenD 0 1 poolfee);
@@ -44,9 +44,7 @@ Long_TWAP_L_5: uniswap-v3-twap-output-ratio(QuoteToken QuoteTokenD BaseToken Bas
 Long_TWAP_S_5: uniswap-v3-twap-output-ratio(QuoteToken QuoteTokenD BaseToken BaseTokenD int-mul(5 second_interval) int-mul(10 second_interval) poolfee),
 Short_TWAP_S_5: uniswap-v3-twap-output-ratio(QuoteToken QuoteTokenD BaseToken BaseTokenD int-mul(5 second_interval) int-mul(6 second_interval) poolfee);
 
-
-
-#Calculate_the_boundaries_with_the_prev_closes 
+#Calculate_boundaries
 Boundary : decimal18-mul(Short_TWAP_S Boundary_value),
 Boundary_1 : decimal18-mul(Short_TWAP_S_1 Boundary_value),
 Boundary_2 : decimal18-mul(Short_TWAP_S_2 Boundary_value),
@@ -58,12 +56,12 @@ Boundary_5 : decimal18-mul(Short_TWAP_S_5 Boundary_value);
 /* 0 */
 /* we want to do Long_TWAP_S minus Long_TWAP_L but no neg numbers*/
 Tcheck: greater-than(Long_TWAP_S Long_TWAP_L ), /*returns 0 if sub will make negative */
-Trend_distance:if(equal-to(Tcheck 0) decimail18-sub(Long_TWAP_L Long_TWAP_S) decimail18-sub(Long_TWAP_S Long_TWAP_L)), /* if it will make it negative we want to switch it around */
-Tneg_bool:if(equal-to(Tcheck 0) 1 0); /*value of 1 means it is negative */
+Trend_distance:if(is-zero(Tcheck) decimal18-sub(Long_TWAP_L Long_TWAP_S) decimal18-sub(Long_TWAP_S Long_TWAP_L)), /* if it will make it negative we want to switch it around */
+Tneg_bool: is-zero(Tcheck); /*value of 1 means it is negative */
 
 Pcheck: greater-than(Long_TWAP_S Long_TWAP_L ), /*returns 0 if sub will make negative */
-Price_distance:if(equal-to(Pcheck 0) decimail18-sub(Long_TWAP_L Short_TWAP_S) decimail18-sub(Short_TWAP_S Long_TWAP_L)), /* if it will make it negative we want to switch it around */
-Pneg_bool:if(equal-to(Pcheck 0) 1 0); /*value of 1 means it is negative */
+Price_distance:if(is-zero(Pcheck) decimal18-sub(Long_TWAP_L Short_TWAP_S) decimal18-sub(Short_TWAP_S Long_TWAP_L)), /* if it will make it negative we want to switch it around */
+Pneg_bool:is-zero(Pcheck); /*value of 1 means it is negative */
 
 /*if both are + or - you remove the value of the what is getting taken away ignoring signs*/
 /*if one is - and one is + you add the value of what is getting taken away ignoring signs*/
@@ -83,282 +81,288 @@ Pneg_bool:if(equal-to(Pcheck 0) 1 0); /*value of 1 means it is negative */
 /*  (2) - (-8) = 10  */
 
 /*checking how we need to handle the sub*/
-both_pos:if(equal-to(int-add(Tneg_bool Pneg_bool) 0) 1 0),
-both_neg: if(equal-to(int-add(Tneg_bool Pneg_bool) 1) 1 0),
-first_neg: if(every(equal-to(Tneg_bool 1) equal-to(Pneg_bool 0) 1 0),
-first_pos: if(every(equal-to(Tneg_bool 0) equal-to(Pneg_bool 1) 1 0),
+both_pos:is-zero(int-add(Tneg_bool Pneg_bool)),
+both_neg: equal-to(int-add(Tneg_bool Pneg_bool) 2),
+first_neg: every(Tneg_bool is-zero(Pneg_bool),
+first_pos: every(is-zero(Tneg_bool) Pneg_bool),
 which_greater: greater-than(Price_distance Trend_distance); /* returns 1 if first is greater 0 if second */
 
 Svalue:
-  if(every(equal-to(both_pos 1) equal-to(which_greater 1)) decimal18-sub(Price_distance Trend_distance) /*neg bool off*/
-    if(every(equal-to(both_pos 1) equal-to(which_greater 0)) decimal18-sub(Trend_distance Price_distance) /*neg bool on*/
-      if(every(equal-to(both_neg 1) equal-to(which_greater 1)) decimal18-sub(Price_distance Trend_distance) /*neg bool on*/
-        if(every(equal-to(both_neg 1) equal-to(which_greater 0)) decimal18-sub(Trend_distance Price_distance) /*neg bool off*/
-          if(every(equal-to(first_neg 1) equal-to(which_greater 1)) decimal18-sub(Price_distance Trend_distance) /*neg bool on*/
-            if(every(equal-to(first_neg 1) equal-to(which_greater 0)) decimal18-sub(Trend_distance Price_distance) /*neg bool on*/
-              if(every(equal-to(first_pos 1) equal-to(which_greater 1)) decimal18-sub(Price_distance Trend_distance) /*neg bool off*/
-                if(every(equal-to(first_pos 1) equal-to(which_greater 0)) decimal18-sub(Trend_distance Price_distance))))))))); /*neg bool off*/
+  conditions(
+  every(both_pos which_greater) decimal18-sub(Price_distance Trend_distance)           /*neg bool off*/
+  every(both_pos is-zero(which_greater)) decimal18-sub(Trend_distance Price_distance)  /*neg bool on*/
+  every(both_neg which_greater) decimal18-sub(Price_distance Trend_distance)           /*neg bool on*/
+  every(both_neg is-zero(which_greater)) decimal18-sub(Trend_distance Price_distance)  /*neg bool off*/
+  every(first_neg which_greater) decimal18-sub(Price_distance Trend_distance)          /*neg bool on*/
+  every(first_neg is-zero(which_greater)) decimal18-sub(Trend_distance Price_distance) /*neg bool on*/
+  every(first_pos which_greater) decimal18-sub(Price_distance Trend_distance)          /*neg bool off*/
+  every(first_pos is-zero(which_greater) decimal18-sub(Trend_distance Price_distance)); /*neg bool off*/
 
 Sneg:
-  if(every(equal-to(both_pos 1) equal-to(which_greater 1)) 0) /*neg bool off*/
-    if(every(equal-to(both_pos 1) equal-to(which_greater 0)) 1) /*neg bool on*/
-      if(every(equal-to(both_neg 1) equal-to(which_greater 1)) 1) /*neg bool on*/
-        if(every(equal-to(both_neg 1) equal-to(which_greater 0)) 0) /*neg bool off*/
-          if(every(equal-to(first_neg 1) equal-to(which_greater 1)) 1) /*neg bool on*/
-            if(every(equal-to(first_neg 1) equal-to(which_greater 0)) 1) /*neg bool on*/
-              if(every(equal-to(first_pos 1) equal-to(which_greater 1)) 0) /*neg bool off*/
-                if(every(equal-to(first_pos 1) equal-to(which_greater 0)) 0)))))))); /*neg bool off*/
+  conditions(
+    every(both_pos which_greater_1) 0             
+    every(both_pos is-zero(which_greater_1)) 1    
+    every(both_neg which_greater_1) 1             
+    every(both_neg is-zero(which_greater_1)) 0    
+    every(first_neg which_greater_1) 1            
+    every(first_neg is-zero(which_greater_1)) 1   
+    every(first_pos which_greater_1) 0            
+    every(first_pos is-zero(which_greater_1)) 0); 
 
 /* 1 */
 Tcheck_1: greater-than(Long_TWAP_S_1 Long_TWAP_L_1 ), 
-Trend_distance_1:if(equal-to(Tcheck_1 0) decimail18-sub(Long_TWAP_L_1 Long_TWAP_S_1) decimail18-sub(Long_TWAP_S_1 Long_TWAP_L_1)), 
-Tneg_bool_1:if(equal-to(Tcheck_1 0) 1 0); 
+Trend_distance_1:if(is-zero(Tcheck_1) decimal18-sub(Long_TWAP_L_1 Long_TWAP_S_1) decimal18-sub(Long_TWAP_S_1 Long_TWAP_L_1)), 
+Tneg_bool_1:is-zero(Tcheck_1); 
 
 Pcheck_1: greater-than(Long_TWAP_S_1 Long_TWAP_L_1), 
-Price_distance_1:if(equal-to(Pcheck_1 0) decimail18-sub(Long_TWAP_L_1 Short_TWAP_S_1) decimail18-sub(Short_TWAP_S_1 Long_TWAP_L_1)), 
-Pneg_bool_1:if(equal-to(Pcheck_1 0) 1 0); 
+Price_distance_1:if(equal-to(Pcheck_1 0) decimal18-sub(Long_TWAP_L_1 Short_TWAP_S_1) decimal18-sub(Short_TWAP_S_1 Long_TWAP_L_1)), 
+Pneg_bool_1:is-zero(Pcheck_1); 
 
 /*checking how we need to handle the sub*/
-both_pos_1:if(equal-to(int-add(Tneg_bool_1 Pneg_bool_1) 0) 1 0),
-both_neg_1: if(equal-to(int-add(Tneg_bool_1 Pneg_bool_1) 1) 1 0),
-first_neg_1: if(every(equal-to(Tneg_bool_1 1) equal-to(Pneg_bool_1 0) 1 0),
-first_pos_1: if(every(equal-to(Tneg_bool_1 0) equal-to(Pneg_bool_1 1) 1 0),
-which_greater_1: greater-than(Price_distance_1 Trend_distance_1); 
+both_pos_1:is-zero(int-add(Tneg_bool_1 Pneg_bool_1)),
+both_neg_1: equal-to(int-add(Tneg_bool_1 Pneg_bool_1) 2),
+first_neg_1: every(Tneg_bool_1 is-zero(Pneg_bool_1),
+first_pos_1: every(is-zero(Tneg_bool_1) Pneg_bool_1),
+which_greater_1: greater-than(Price_distance_1 Trend_distance_1);
 
 Svalue_1:
-  if(every(equal-to(both_pos_1 1) equal-to(which_greater_1 1)) decimal18-sub(Price_distance_1 Trend_distance_1) 
-    if(every(equal-to(both_pos_1 1) equal-to(which_greater_1 0)) decimal18-sub(Trend_distance_1 Price_distance_1) 
-      if(every(equal-to(both_neg_1 1) equal-to(which_greater_1 1)) decimal18-sub(Price_distance_1 Trend_distance_1) 
-        if(every(equal-to(both_neg_1 1) equal-to(which_greater_1 0)) decimal18-sub(Trend_distance_1 Price_distance_1) 
-          if(every(equal-to(first_neg_1 1) equal-to(which_greater_1 1)) decimal18-sub(Price_distance_1 Trend_distance_1) 
-            if(every(equal-to(first_neg_1 1) equal-to(which_greater_1 0)) decimal18-sub(Trend_distance_1 Price_distance_1) 
-              if(every(equal-to(first_pos_1 1) equal-to(which_greater_1 1)) decimal18-sub(Price_distance_1 Trend_distance_1)
-                if(every(equal-to(first_pos_1 1) equal-to(which_greater_1 0)) decimal18-sub(Trend_distance_1 Price_distance_1))))))))); 
+  conditions(
+    every(both_pos_1 which_greater_1) decimal18-sub(Price_distance_1 Trend_distance_1) 
+    every(both_pos_1 is-zero(which_greater_1) decimal18-sub(Trend_distance_1 Price_distance_1) 
+    every(both_neg_1 which_greater_1) decimal18-sub(Price_distance_1 Trend_distance_1) 
+    every(both_neg_1 is-zero(which_greater_1) decimal18-sub(Trend_distance_1 Price_distance_1) 
+    every(first_neg_1 which_greater_1) decimal18-sub(Price_distance_1 Trend_distance_1) 
+    every(first_neg_1 is-zero(which_greater_1) decimal18-sub(Trend_distance_1 Price_distance_1) 
+    every(first_pos_1 which_greater_1) decimal18-sub(Price_distance_1 Trend_distance_1)
+    every(first_pos_1 is-zero(which_greater_1) decimal18-sub(Trend_distance_1 Price_distance_1)); 
 
 Sneg_1:
-  if(every(equal-to(both_pos_1 1) equal-to(which_greater_1 1)) 0)
-    if(every(equal-to(both_pos_1 1) equal-to(which_greater_1 0)) 1)
-      if(every(equal-to(both_neg_1 1) equal-to(which_greater_1 1)) 1) 
-        if(every(equal-to(both_neg_1 1) equal-to(which_greater_1 0)) 0) 
-          if(every(equal-to(first_neg_1 1) equal-to(which_greater_1 1)) 1) 
-            if(every(equal-to(first_neg_1 1) equal-to(which_greater_1 0)) 1) 
-              if(every(equal-to(first_pos_1 1) equal-to(which_greater_1 1)) 0) 
-                if(every(equal-to(first_pos_1 1) equal-to(which_greater_1 0)) 0)))))))); 
+  conditions(
+    every(both_pos_1 which_greater_1) 0
+    every(both_pos_1 is-zero(which_greater_1)) 1
+    every(both_neg_1 which_greater_1) 1
+    every(both_neg_1 is-zero(which_greater_1)) 0
+    every(first_neg_1 which_greater_1) 1
+    every(first_neg_1 is-zero(which_greater_1)) 1
+    every(first_pos_1 which_greater_1) 0
+    every(first_pos_1 is-zero(which_greater_1)) 0);
 
 /* 2 */
 Tcheck_2: greater-than(Long_TWAP_S_2 Long_TWAP_L_2 ), 
-Trend_distance_2:if(equal-to(Tcheck_2 0) decimail18-sub(Long_TWAP_L_2 Long_TWAP_S_2) decimail18-sub(Long_TWAP_S_2 Long_TWAP_L_2)), 
-Tneg_bool_2:if(equal-to(Tcheck_2 0) 1 0); 
+Trend_distance_2:if(is-zero(Tcheck_2) decimal18-sub(Long_TWAP_L_2 Long_TWAP_S_2) decimal18-sub(Long_TWAP_S_2 Long_TWAP_L_2)), 
+Tneg_bool_2:is-zero(Tcheck_2); 
 
 Pcheck_2: greater-than(Long_TWAP_S_2 Long_TWAP_L_2), 
-Price_distance_2:if(equal-to(Pcheck_2 0) decimail18-sub(Long_TWAP_L_2 Short_TWAP_S_2) decimail18-sub(Short_TWAP_S_2 Long_TWAP_L_2)), 
-Pneg_bool_2:if(equal-to(Pcheck_2 0) 1 0); 
+Price_distance_2:if(equal-to(Pcheck_2 0) decimal18-sub(Long_TWAP_L_2 Short_TWAP_S_2) decimal18-sub(Short_TWAP_S_2 Long_TWAP_L_2)), 
+Pneg_bool_2:is-zero(Pcheck_2); 
 
 /*checking how we need to handle the sub*/
-both_pos_2:if(equal-to(int-add(Tneg_bool_2 Pneg_bool_2) 0) 1 0),
-both_neg_2: if(equal-to(int-add(Tneg_bool_2 Pneg_bool_2) 1) 1 0),
-first_neg_2: if(every(equal-to(Tneg_bool_2 1) equal-to(Pneg_bool_2 0) 1 0),
-first_pos_2: if(every(equal-to(Tneg_bool_2 0) equal-to(Pneg_bool_2 1) 1 0),
-which_greater_2: greater-than(Price_distance_2 Trend_distance_2); 
+both_pos_2:is-zero(int-add(Tneg_bool_2 Pneg_bool_2)),
+both_neg_2: equal-to(int-add(Tneg_bool_2 Pneg_bool_2) 2),
+first_neg_2: every(Tneg_bool_2 is-zero(Pneg_bool_2),
+first_pos_2: every(is-zero(Tneg_bool_2) Pneg_bool_2),
+which_greater_2: greater-than(Price_distance_2 Trend_distance_2);
 
 Svalue_2:
-  if(every(equal-to(both_pos_2 1) equal-to(which_greater_2 1)) decimal18-sub(Price_distance_2 Trend_distance_2) 
-    if(every(equal-to(both_pos_2 1) equal-to(which_greater_2 0)) decimal18-sub(Trend_distance_2 Price_distance_2) 
-      if(every(equal-to(both_neg_2 1) equal-to(which_greater_2 1)) decimal18-sub(Price_distance_2 Trend_distance_2) 
-        if(every(equal-to(both_neg_2 1) equal-to(which_greater_2 0)) decimal18-sub(Trend_distance_2 Price_distance_2) 
-          if(every(equal-to(first_neg_2 1) equal-to(which_greater_2 1)) decimal18-sub(Price_distance_2 Trend_distance_2) 
-            if(every(equal-to(first_neg_2 1) equal-to(which_greater_2 0)) decimal18-sub(Trend_distance_2 Price_distance_2) 
-              if(every(equal-to(first_pos_2 1) equal-to(which_greater_2 1)) decimal18-sub(Price_distance_2 Trend_distance_2)
-                if(every(equal-to(first_pos_2 1) equal-to(which_greater_2 0)) decimal18-sub(Trend_distance_2 Price_distance_2))))))))); 
+  conditions(
+    every(both_pos_2 which_greater_2) decimal18-sub(Price_distance_2 Trend_distance_2) 
+    every(both_pos_2 is-zero(which_greater_2) decimal18-sub(Trend_distance_2 Price_distance_2) 
+    every(both_neg_2 which_greater_2) decimal18-sub(Price_distance_2 Trend_distance_2) 
+    every(both_neg_2 is-zero(which_greater_2) decimal18-sub(Trend_distance_2 Price_distance_2) 
+    every(first_neg_2 which_greater_2) decimal18-sub(Price_distance_2 Trend_distance_2) 
+    every(first_neg_2 is-zero(which_greater_2) decimal18-sub(Trend_distance_2 Price_distance_2) 
+    every(first_pos_2 which_greater_2) decimal18-sub(Price_distance_2 Trend_distance_2)
+    every(first_pos_2 is-zero(which_greater_2) decimal18-sub(Trend_distance_2 Price_distance_2)); 
 
 Sneg_2:
-  if(every(equal-to(both_pos_2 1) equal-to(which_greater_2 1)) 0)
-    if(every(equal-to(both_pos_2 1) equal-to(which_greater_2 0)) 1)
-      if(every(equal-to(both_neg_2 1) equal-to(which_greater_2 1)) 1) 
-        if(every(equal-to(both_neg_2 1) equal-to(which_greater_2 0)) 0) 
-          if(every(equal-to(first_neg_2 1) equal-to(which_greater_2 1)) 1) 
-            if(every(equal-to(first_neg_2 1) equal-to(which_greater_2 0)) 1) 
-              if(every(equal-to(first_pos_2 1) equal-to(which_greater_2 1)) 0) 
-                if(every(equal-to(first_pos_2 1) equal-to(which_greater_2 0)) 0)))))))); 
+  conditions(
+    every(both_pos_2 which_greater_2) 0
+    every(both_pos_2 is-zero(which_greater_2)) 1
+    every(both_neg_2 which_greater_2) 1
+    every(both_neg_2 is-zero(which_greater_2)) 0
+    every(first_neg_2 which_greater_2) 1
+    every(first_neg_2 is-zero(which_greater_2)) 1
+    every(first_pos_2 which_greater_2) 0
+    every(first_pos_2 is-zero(which_greater_2)) 0);
 
 /* 3 */
 Tcheck_3: greater-than(Long_TWAP_S_3 Long_TWAP_L_3 ), 
-Trend_distance_3:if(equal-to(Tcheck_3 0) decimail18-sub(Long_TWAP_L_3 Long_TWAP_S_3) decimail18-sub(Long_TWAP_S_3 Long_TWAP_L_3)), 
-Tneg_bool_3:if(equal-to(Tcheck_3 0) 1 0); 
+Trend_distance_3:if(is-zero(Tcheck_3) decimal18-sub(Long_TWAP_L_3 Long_TWAP_S_3) decimal18-sub(Long_TWAP_S_3 Long_TWAP_L_3)), 
+Tneg_bool_3:is-zero(Tcheck_3); 
 
 Pcheck_3: greater-than(Long_TWAP_S_3 Long_TWAP_L_3), 
-Price_distance_3:if(equal-to(Pcheck_3 0) decimail18-sub(Long_TWAP_L_3 Short_TWAP_S_3) decimail18-sub(Short_TWAP_S_3 Long_TWAP_L_3)), 
-Pneg_bool_3:if(equal-to(Pcheck_3 0) 1 0); 
+Price_distance_3:if(equal-to(Pcheck_3 0) decimal18-sub(Long_TWAP_L_3 Short_TWAP_S_3) decimal18-sub(Short_TWAP_S_3 Long_TWAP_L_3)), 
+Pneg_bool_3:is-zero(Pcheck_3); 
 
 /*checking how we need to handle the sub*/
-both_pos_3:if(equal-to(int-add(Tneg_bool_3 Pneg_bool_3) 0) 1 0),
-both_neg_3: if(equal-to(int-add(Tneg_bool_3 Pneg_bool_3) 1) 1 0),
-first_neg_3: if(every(equal-to(Tneg_bool_3 1) equal-to(Pneg_bool_3 0) 1 0),
-first_pos_3: if(every(equal-to(Tneg_bool_3 0) equal-to(Pneg_bool_3 1) 1 0),
-which_greater_3: greater-than(Price_distance_3 Trend_distance_3); 
+both_pos_3:is-zero(int-add(Tneg_bool_3 Pneg_bool_3)),
+both_neg_3: equal-to(int-add(Tneg_bool_3 Pneg_bool_3) 2),
+first_neg_3: every(Tneg_bool_3 is-zero(Pneg_bool_3),
+first_pos_3: every(is-zero(Tneg_bool_3) Pneg_bool_3),
+which_greater_3: greater-than(Price_distance_3 Trend_distance_3);
 
 Svalue_3:
-  if(every(equal-to(both_pos_3 1) equal-to(which_greater_3 1)) decimal18-sub(Price_distance_3 Trend_distance_3) 
-    if(every(equal-to(both_pos_3 1) equal-to(which_greater_3 0)) decimal18-sub(Trend_distance_3 Price_distance_3) 
-      if(every(equal-to(both_neg_3 1) equal-to(which_greater_3 1)) decimal18-sub(Price_distance_3 Trend_distance_3) 
-        if(every(equal-to(both_neg_3 1) equal-to(which_greater_3 0)) decimal18-sub(Trend_distance_3 Price_distance_3) 
-          if(every(equal-to(first_neg_3 1) equal-to(which_greater_3 1)) decimal18-sub(Price_distance_3 Trend_distance_3) 
-            if(every(equal-to(first_neg_3 1) equal-to(which_greater_3 0)) decimal18-sub(Trend_distance_3 Price_distance_3) 
-              if(every(equal-to(first_pos_3 1) equal-to(which_greater_3 1)) decimal18-sub(Price_distance_3 Trend_distance_3)
-                if(every(equal-to(first_pos_3 1) equal-to(which_greater_3 0)) decimal18-sub(Trend_distance_3 Price_distance_3))))))))); 
+  conditions(
+    every(both_pos_3 which_greater_3) decimal18-sub(Price_distance_3 Trend_distance_3) 
+    every(both_pos_3 is-zero(which_greater_3) decimal18-sub(Trend_distance_3 Price_distance_3) 
+    every(both_neg_3 which_greater_3) decimal18-sub(Price_distance_3 Trend_distance_3) 
+    every(both_neg_3 is-zero(which_greater_3) decimal18-sub(Trend_distance_3 Price_distance_3) 
+    every(first_neg_3 which_greater_3) decimal18-sub(Price_distance_3 Trend_distance_3) 
+    every(first_neg_3 is-zero(which_greater_3) decimal18-sub(Trend_distance_3 Price_distance_3) 
+    every(first_pos_3 which_greater_3) decimal18-sub(Price_distance_3 Trend_distance_3)
+    every(first_pos_3 is-zero(which_greater_3) decimal18-sub(Trend_distance_3 Price_distance_3)); 
 
 Sneg_3:
-  if(every(equal-to(both_pos_3 1) equal-to(which_greater_3 1)) 0)
-    if(every(equal-to(both_pos_3 1) equal-to(which_greater_3 0)) 1)
-      if(every(equal-to(both_neg_3 1) equal-to(which_greater_3 1)) 1) 
-        if(every(equal-to(both_neg_3 1) equal-to(which_greater_3 0)) 0) 
-          if(every(equal-to(first_neg_3 1) equal-to(which_greater_3 1)) 1) 
-            if(every(equal-to(first_neg_3 1) equal-to(which_greater_3 0)) 1) 
-              if(every(equal-to(first_pos_3 1) equal-to(which_greater_3 1)) 0) 
-                if(every(equal-to(first_pos_3 1) equal-to(which_greater_3 0)) 0)))))))); 
+  conditions(
+    every(both_pos_3 which_greater_3) 0
+    every(both_pos_3 is-zero(which_greater_3)) 1
+    every(both_neg_3 which_greater_3) 1
+    every(both_neg_3 is-zero(which_greater_3)) 0
+    every(first_neg_3 which_greater_3) 1
+    every(first_neg_3 is-zero(which_greater_3)) 1
+    every(first_pos_3 which_greater_3) 0
+    every(first_pos_3 is-zero(which_greater_3)) 0);
+
 
 /* 4 */
 Tcheck_4: greater-than(Long_TWAP_S_4 Long_TWAP_L_4 ), 
-Trend_distance_4:if(equal-to(Tcheck_4 0) decimail18-sub(Long_TWAP_L_4 Long_TWAP_S_4) decimail18-sub(Long_TWAP_S_4 Long_TWAP_L_4)), 
-Tneg_bool_4:if(equal-to(Tcheck_4 0) 1 0); 
+Trend_distance_4:if(is-zero(Tcheck_4) decimal18-sub(Long_TWAP_L_4 Long_TWAP_S_4) decimal18-sub(Long_TWAP_S_4 Long_TWAP_L_4)), 
+Tneg_bool_4:is-zero(Tcheck_4); 
 
 Pcheck_4: greater-than(Long_TWAP_S_4 Long_TWAP_L_4), 
-Price_distance_4:if(equal-to(Pcheck_4 0) decimail18-sub(Long_TWAP_L_4 Short_TWAP_S_4) decimail18-sub(Short_TWAP_S_4 Long_TWAP_L_4)), 
-Pneg_bool_4:if(equal-to(Pcheck_4 0) 1 0); 
+Price_distance_4:if(equal-to(Pcheck_4 0) decimal18-sub(Long_TWAP_L_4 Short_TWAP_S_4) decimal18-sub(Short_TWAP_S_4 Long_TWAP_L_4)), 
+Pneg_bool_4:is-zero(Pcheck_4); 
 
 /*checking how we need to handle the sub*/
-both_pos_4:if(equal-to(int-add(Tneg_bool_4 Pneg_bool_4) 0) 1 0),
-both_neg_4: if(equal-to(int-add(Tneg_bool_4 Pneg_bool_4) 1) 1 0),
-first_neg_4: if(every(equal-to(Tneg_bool_4 1) equal-to(Pneg_bool_4 0) 1 0),
-first_pos_4: if(every(equal-to(Tneg_bool_4 0) equal-to(Pneg_bool_4 1) 1 0),
-which_greater_4: greater-than(Price_distance_4 Trend_distance_4); 
+both_pos_4:is-zero(int-add(Tneg_bool_4 Pneg_bool_4)),
+both_neg_4: equal-to(int-add(Tneg_bool_4 Pneg_bool_4) 2),
+first_neg_4: every(Tneg_bool_4 is-zero(Pneg_bool_4),
+first_pos_4: every(is-zero(Tneg_bool_4) Pneg_bool_4),
+which_greater_4: greater-than(Price_distance_4 Trend_distance_4);
 
 Svalue_4:
-  if(every(equal-to(both_pos_4 1) equal-to(which_greater_4 1)) decimal18-sub(Price_distance_4 Trend_distance_4) 
-    if(every(equal-to(both_pos_4 1) equal-to(which_greater_4 0)) decimal18-sub(Trend_distance_4 Price_distance_4) 
-      if(every(equal-to(both_neg_4 1) equal-to(which_greater_4 1)) decimal18-sub(Price_distance_4 Trend_distance_4) 
-        if(every(equal-to(both_neg_4 1) equal-to(which_greater_4 0)) decimal18-sub(Trend_distance_4 Price_distance_4) 
-          if(every(equal-to(first_neg_4 1) equal-to(which_greater_4 1)) decimal18-sub(Price_distance_4 Trend_distance_4) 
-            if(every(equal-to(first_neg_4 1) equal-to(which_greater_4 0)) decimal18-sub(Trend_distance_4 Price_distance_4) 
-              if(every(equal-to(first_pos_4 1) equal-to(which_greater_4 1)) decimal18-sub(Price_distance_4 Trend_distance_4)
-                if(every(equal-to(first_pos_4 1) equal-to(which_greater_4 0)) decimal18-sub(Trend_distance_4 Price_distance_4))))))))); 
+  conditions(
+    every(both_pos_4 which_greater_4) decimal18-sub(Price_distance_4 Trend_distance_4) 
+    every(both_pos_4 is-zero(which_greater_4) decimal18-sub(Trend_distance_4 Price_distance_4) 
+    every(both_neg_4 which_greater_4) decimal18-sub(Price_distance_4 Trend_distance_4) 
+    every(both_neg_4 is-zero(which_greater_4) decimal18-sub(Trend_distance_4 Price_distance_4) 
+    every(first_neg_4 which_greater_4) decimal18-sub(Price_distance_4 Trend_distance_4) 
+    every(first_neg_4 is-zero(which_greater_4) decimal18-sub(Trend_distance_4 Price_distance_4) 
+    every(first_pos_4 which_greater_4) decimal18-sub(Price_distance_4 Trend_distance_4)
+    every(first_pos_4 is-zero(which_greater_4) decimal18-sub(Trend_distance_4 Price_distance_4)); 
 
 Sneg_4:
-  if(every(equal-to(both_pos_4 1) equal-to(which_greater_4 1)) 0)
-    if(every(equal-to(both_pos_4 1) equal-to(which_greater_4 0)) 1)
-      if(every(equal-to(both_neg_4 1) equal-to(which_greater_4 1)) 1) 
-        if(every(equal-to(both_neg_4 1) equal-to(which_greater_4 0)) 0) 
-          if(every(equal-to(first_neg_4 1) equal-to(which_greater_4 1)) 1) 
-            if(every(equal-to(first_neg_4 1) equal-to(which_greater_4 0)) 1) 
-              if(every(equal-to(first_pos_4 1) equal-to(which_greater_4 1)) 0) 
-                if(every(equal-to(first_pos_4 1) equal-to(which_greater_4 0)) 0)))))))); 
+  conditions(
+    every(both_pos_4 which_greater_4) 0
+    every(both_pos_4 is-zero(which_greater_4)) 1
+    every(both_neg_4 which_greater_4) 1
+    every(both_neg_4 is-zero(which_greater_4)) 0
+    every(first_neg_4 which_greater_4) 1
+    every(first_neg_4 is-zero(which_greater_4)) 1
+    every(first_pos_4 which_greater_4) 0
+    every(first_pos_4 is-zero(which_greater_4)) 0);
+
 
 /* 5 */
 Tcheck_5: greater-than(Long_TWAP_S_5 Long_TWAP_L_5 ), 
-Trend_distance_5:if(equal-to(Tcheck_5 0) decimail18-sub(Long_TWAP_L_5 Long_TWAP_S_5) decimail18-sub(Long_TWAP_S_5 Long_TWAP_L_5)), 
-Tneg_bool_5:if(equal-to(Tcheck_5 0) 1 0); 
+Trend_distance_5:if(is-zero(Tcheck_5) decimal18-sub(Long_TWAP_L_5 Long_TWAP_S_5) decimal18-sub(Long_TWAP_S_5 Long_TWAP_L_5)), 
+Tneg_bool_5:is-zero(Tcheck_5); 
 
 Pcheck_5: greater-than(Long_TWAP_S_5 Long_TWAP_L_5), 
-Price_distance_5:if(equal-to(Pcheck_5 0) decimail18-sub(Long_TWAP_L_5 Short_TWAP_S_5) decimail18-sub(Short_TWAP_S_5 Long_TWAP_L_5)), 
-Pneg_bool_5:if(equal-to(Pcheck_5 0) 1 0); 
+Price_distance_5:if(equal-to(Pcheck_5 0) decimal18-sub(Long_TWAP_L_5 Short_TWAP_S_5) decimal18-sub(Short_TWAP_S_5 Long_TWAP_L_5)), 
+Pneg_bool_5:is-zero(Pcheck_5); 
 
 /*checking how we need to handle the sub*/
-both_pos_5:if(equal-to(int-add(Tneg_bool_5 Pneg_bool_5) 0) 1 0),
-both_neg_5: if(equal-to(int-add(Tneg_bool_5 Pneg_bool_5) 1) 1 0),
-first_neg_5: if(every(equal-to(Tneg_bool_5 1) equal-to(Pneg_bool_5 0) 1 0),
-first_pos_5: if(every(equal-to(Tneg_bool_5 0) equal-to(Pneg_bool_5 1) 1 0),
-which_greater_5: greater-than(Price_distance_5 Trend_distance_5); 
+both_pos_5:is-zero(int-add(Tneg_bool_5 Pneg_bool_5)),
+both_neg_5: equal-to(int-add(Tneg_bool_5 Pneg_bool_5) 2),
+first_neg_5: every(Tneg_bool_5 is-zero(Pneg_bool_5),
+first_pos_5: every(is-zero(Tneg_bool_5) Pneg_bool_5),
+which_greater_5: greater-than(Price_distance_5 Trend_distance_5);
 
 Svalue_5:
-  if(every(equal-to(both_pos_5 1) equal-to(which_greater_5 1)) decimal18-sub(Price_distance_5 Trend_distance_5) 
-    if(every(equal-to(both_pos_5 1) equal-to(which_greater_5 0)) decimal18-sub(Trend_distance_5 Price_distance_5) 
-      if(every(equal-to(both_neg_5 1) equal-to(which_greater_5 1)) decimal18-sub(Price_distance_5 Trend_distance_5) 
-        if(every(equal-to(both_neg_5 1) equal-to(which_greater_5 0)) decimal18-sub(Trend_distance_5 Price_distance_5) 
-          if(every(equal-to(first_neg_5 1) equal-to(which_greater_5 1)) decimal18-sub(Price_distance_5 Trend_distance_5) 
-            if(every(equal-to(first_neg_5 1) equal-to(which_greater_5 0)) decimal18-sub(Trend_distance_5 Price_distance_5) 
-              if(every(equal-to(first_pos_5 1) equal-to(which_greater_5 1)) decimal18-sub(Price_distance_5 Trend_distance_5)
-                if(every(equal-to(first_pos_5 1) equal-to(which_greater_5 0)) decimal18-sub(Trend_distance_5 Price_distance_5))))))))); 
+  conditions(
+    every(both_pos_5 which_greater_5) decimal18-sub(Price_distance_5 Trend_distance_5) 
+    every(both_pos_5 is-zero(which_greater_5) decimal18-sub(Trend_distance_5 Price_distance_5) 
+    every(both_neg_5 which_greater_5) decimal18-sub(Price_distance_5 Trend_distance_5) 
+    every(both_neg_5 is-zero(which_greater_5) decimal18-sub(Trend_distance_5 Price_distance_5) 
+    every(first_neg_5 which_greater_5) decimal18-sub(Price_distance_5 Trend_distance_5) 
+    every(first_neg_5 is-zero(which_greater_5) decimal18-sub(Trend_distance_5 Price_distance_5) 
+    every(first_pos_5 which_greater_5) decimal18-sub(Price_distance_5 Trend_distance_5)
+    every(first_pos_5 is-zero(which_greater_5) decimal18-sub(Trend_distance_5 Price_distance_5)); 
 
 Sneg_5:
-  if(every(equal-to(both_pos_5 1) equal-to(which_greater_5 1)) 0)
-    if(every(equal-to(both_pos_5 1) equal-to(which_greater_5 0)) 1)
-      if(every(equal-to(both_neg_5 1) equal-to(which_greater_5 1)) 1) 
-        if(every(equal-to(both_neg_5 1) equal-to(which_greater_5 0)) 0) 
-          if(every(equal-to(first_neg_5 1) equal-to(which_greater_5 1)) 1) 
-            if(every(equal-to(first_neg_5 1) equal-to(which_greater_5 0)) 1) 
-              if(every(equal-to(first_pos_5 1) equal-to(which_greater_5 1)) 0) 
-                if(every(equal-to(first_pos_5 1) equal-to(which_greater_5 0)) 0)))))))); 
+  conditions(
+    every(both_pos_5 which_greater_5) 0
+    every(both_pos_5 is-zero(which_greater_5)) 1
+    every(both_neg_5 which_greater_5) 1
+    every(both_neg_5 is-zero(which_greater_5)) 0
+    every(first_neg_5 which_greater_5) 1
+    every(first_neg_5 is-zero(which_greater_5)) 1
+    every(first_pos_5 which_greater_5) 0
+    every(first_pos_5 is-zero(which_greater_5)) 0);
+
 
 
 /* No for loops atm so use expressions, write out each twap and test */
-/* Entry Condition for opening position */ 
+/* Entry Condition for opening position */
 #LongCondition
   Svalue_n, Sneg_n, Boundary_n:,
-  result: if(every(greater-than(Svalue_n Boundary_n) greater-than(Short_TWAP_S Short_TWAP_L) equal-to(Sneg_n 1))1 0);
+  result: every(greater-than(Svalue_n Boundary_n) greater-than(Short_TWAP_S Short_TWAP_L) Sneg_n);
 
-LCcall: call<'LongCondition>(Svalue, Sneg, Boundary),
-LCcall_1: call<'LongCondition>(Svalue_1, Sneg_1, Boundary_1),
-LCcall_2: call<'LongCondition>(Svalue_2, Sneg_2, Boundary_2),
-LCcall_3: call<'LongCondition>(Svalue_3, Sneg_3, Boundary_3),
-LCcall_4: call<'LongCondition>(Svalue_4, Sneg_4, Boundary_4),
-LCcall_5: call<'LongCondition>(Svalue_5, Sneg_5, Boundary_5);
+LCcall: call<'LongCondition>(Svalue Sneg Boundary),
+LCcall_1: call<'LongCondition>(Svalue_1 Sneg_1 Boundary_1),
+LCcall_2: call<'LongCondition>(Svalue_2 Sneg_2 Boundary_2),
+LCcall_3: call<'LongCondition>(Svalue_3 Sneg_3 Boundary_3),
+LCcall_4: call<'LongCondition>(Svalue_4 Sneg_4 Boundary_4),
+LCcall_5: call<'LongCondition>(Svalue_5 Sneg_5 Boundary_5);
 
-enterlong : if(any(equal(LCcall 1) equal(LCcall_1 1) equal(cLCcall_2 1) equal(LCcall_3 1) equal(LCcall_4 1) equal(LCcall_5 1)) 1 0);
+enterlong : any(equal(LCcall 1) equal(LCcall_1 1) equal(cLCcall_2 1) equal(LCcall_3 1) equal(LCcall_4 1) equal(LCcall_5 1));
 
 /* memory */
 is_long: 0,
 entry_price: 0,
-SL_value: mul(entry_price 0.96);
+SL_value: mul(entry_price 96e16);
 
 /* contexts */ 
 solver_input: input-token-address(),
 solver_output:  output-token-address();
 
 /* Quote token = WETH, USDT. Base token = shitcoin */
-buy_contexts:if(every(
+buy_contexts:every(
   equal-to(solver_input Quote_token)
-  equal-to(solver_output Base_token))),
-sell_contexts:if(every(
+  equal-to(solver_output Base_token)),
+sell_contexts:every(
   equal-to(solver_input Base_token)
-  equal-to(solver_output Quote_token))),
+  equal-to(solver_output Quote_token)),
 
 /* trade conditions */
-longcondition: if(every(
+longcondition: every(
   equal-to(buy_contexts 1)
   is-zero(get(is_long)) 
   equal-to(enterlong 1)
-  set(is_long 1)));
-TP_condition: if(every(
+  set(is_long 1));
+TP_condition: every(
   equal-to(sell_contexts 1)
   equal-to(get(is_long) 1) 
   less-than(Long_TWAP_S Long_TWAP_L)
-  set(is_long 0)));
-SL_condition: if(every(
+  set(is_long 0));
+SL_condition: every(
   equal-to(sell_contexts 1)
   equal-to(get(is_long) 1) 
   less-than(Current_price SL_value)
-  set(is_long 0)));
+  set(is_long 0));
 
 /* handle amount */
 Amount:if(equal-to(longcondition 1) Buy_volume erc20balanceof(Base_token my_vault_address),
-Price:if(
-  equal-to(longcondition 1) 
+Price:if(longcondition
   /*method for market buy */
   decmial-mul(uniswap-v3-quote-exact-output(QuoteToken BaseToken BaseTokenD Poolfee) 101e16)
-  if(
-    equal-to(TP_condition 1) 
+  set(entry_price uniswap-v3-quote-exact-output(QuoteToken BaseToken BaseTokenD Poolfee) 101e16)
+  if(TP_condition 
     decmial18-mul(uniswap-v3-quote-exact-output(BaseToken QuoteToken QuoteTokenD Poolfee) 99e16)
-    if(equal-to(SL_condition 1)
+    if(SL_condition
       decmial18-mul(uniswap-v3-quote-exact-output(BaseToken QuoteToken QuoteTokenD Poolfee) 99e16)
     /*else nothing */)));
-
-
-
-
-
-
-
-  
 
 
 

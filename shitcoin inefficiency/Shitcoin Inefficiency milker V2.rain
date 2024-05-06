@@ -1,9 +1,11 @@
+
+
 ---
 /* Shitcoin Inefficiency Milker - Long only */
 /* NST example: https://www.dextools.io/app/en/arbitrum/pair-explorer/0xe24f62341d84d11078188d83ca3be118193d6389?t=1714811763171 */
 /* needs 5 mins */
-#setup
-using-words-from 0x23F77e7Bc935503e437166498D7D72f2Ea290E1f 0x5Cf7d0a8c61c8dcC6b0ECB281dF1C17264C2A517
+#Setup
+using-words-from 0x23F77e7Bc935503e437166498D7D72f2Ea290E1f 0x5Cf7d0a8c61c8dcC6b0ECB281dF1C17264C2A517 /* arb specific */
 Wallet_address: 0x5e7E3eD619769833DBc23B21BAd674D512f157ec,
 BaseToken: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb,    /* Shitcoin */
 QuoteToken: 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1,      /* WETH */
@@ -336,12 +338,12 @@ Amount:if(
 #Handle_price
 Price:if(longcondition
   /*method for market buy */
-  decmial-mul(uniswap-v3-quote-exact-output(QuoteToken BaseToken BaseTokenD Poolfee) 101e16)
+  decimal18-mul(uniswap-v3-quote-exact-output(QuoteToken BaseToken BaseTokenD Poolfee) 101e16)
   set(entry_price uniswap-v3-quote-exact-output(QuoteToken BaseToken BaseTokenD Poolfee) 101e16)
   if(TP_condition 
-    decmial18-mul(uniswap-v3-quote-exact-output(BaseToken QuoteToken QuoteTokenD Poolfee) 99e16)
+    decimal18-mul(uniswap-v3-quote-exact-output(BaseToken QuoteToken QuoteTokenD Poolfee) 99e16)
     if(SL_condition
-      decmial18-mul(uniswap-v3-quote-exact-output(BaseToken QuoteToken QuoteTokenD Poolfee) 99e16)
+      decimal18-mul(uniswap-v3-quote-exact-output(BaseToken QuoteToken QuoteTokenD Poolfee) 99e16)
     /*else nothing */)));
 
 

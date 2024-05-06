@@ -3,6 +3,7 @@
 /* NST example: https://www.dextools.io/app/en/arbitrum/pair-explorer/0xe24f62341d84d11078188d83ca3be118193d6389?t=1714811763171 */
 /* needs 5 mins */
 #setup
+using-words-from 0x23F77e7Bc935503e437166498D7D72f2Ea290E1f 0x5Cf7d0a8c61c8dcC6b0ECB281dF1C17264C2A517
 Wallet_address: 0x5e7E3eD619769833DBc23B21BAd674D512f157ec,
 BaseToken: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb,    /* Shitcoin */
 QuoteToken: 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1,      /* WETH */
@@ -11,7 +12,7 @@ QuoteTokenD: 18,
 Poolfee: [uniswap-v3-fee-medium],
 Boundary: 3e16, /*0.03*/
 Buy_volume: 1e16, /* WETH 0.01 */
-second_interval: 60; /*60*/
+second_interval: 300; /*60*/
 
 #Now_price 
 Current_price : uniswap-v3-twap-output-ratio(QuoteToken QuoteTokenD BaseToken BaseTokenD 0 1 poolfee);

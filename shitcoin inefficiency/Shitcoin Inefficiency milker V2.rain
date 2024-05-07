@@ -1,23 +1,30 @@
 ---
+/* arb specific */
 /* Shitcoin Inefficiency Milker - Long only */
 /* NST example: https://www.dextools.io/app/en/arbitrum/pair-explorer/0xe24f62341d84d11078188d83ca3be118193d6389?t=1714811763171 */
 /* needs 5 mins */
-#setup
-using-words-from 0x23f77e7bc935503e437166498d7d72f2ea290e1f 0x5cf7d0a8c61c8dcc6b0ecb281df1c17264c2a517 /* arb specific */
+
+/* Entry Condition for opening position */
+#longcondition
+using-words-from 0x23f77e7bc935503e437166498d7d72f2ea290e1f 0x5cf7d0a8c61c8dcc6b0ecb281df1c17264c2a517
+  svalue-n sneg-n boundary-n short-twap-s short-twap-l:,
+  result: every(greater-than(svalue-n boundary-n) greater-than(short-twap-s short-twap-l) sneg-n);
+
+/* core logic */
+#calculate-io
+using-words-from 0x23f77e7bc935503e437166498d7d72f2ea290e1f 0x5cf7d0a8c61c8dcc6b0ecb281df1c17264c2a517
 wallet-address: 0x5e7e3ed619769833dbc23b21bad674d512f157ec,
 base-token: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb,    /* shitcoin */
 quote-token: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1,      /* weth */
 base-tokend: 18,
 quote-tokend: 18,
 poolfee: [uniswap-v3-fee-medium],
-boundary: 3e16, /*0.03*/
+boundary-value: 3e16, /*0.03*/
 buy-volume: 1e16, /* weth 0.01 */
-second-interval: 300; /*60*/
+second-interval: 300, /*60*/
 
-#now-price 
-current-price : uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token base-tokend 0 1 poolfee);
-
-#obtain-averages
+/*obtain prices*/
+current-price : uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token base-tokend 0 1 poolfee),
 /* 0 */
 long-twap-l: uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token base-tokend int-mul(0 second-interval) int-mul(10 second-interval) poolfee),
 long-twap-s: uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token base-tokend int-mul(0 second-interval) int-mul(5 second-interval) poolfee),
@@ -42,19 +49,17 @@ short-twap-s-4: uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token
 /* 5 */
 long-twap-l-5: uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token base-tokend int-mul(5 second-interval) int-mul(15 second-interval) poolfee),
 long-twap-s-5: uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token base-tokend int-mul(5 second-interval) int-mul(10 second-interval) poolfee),
-short-twap-s-5: uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token base-tokend int-mul(5 second-interval) int-mul(6 second-interval) poolfee);
+short-twap-s-5: uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token base-tokend int-mul(5 second-interval) int-mul(6 second-interval) poolfee),
 
-#calculate-boundaries
+/*obtain boundaries*/
 boundary : decimal18-mul(short-twap-s boundary-value),
 boundary-1 : decimal18-mul(short-twap-s-1 boundary-value),
 boundary-2 : decimal18-mul(short-twap-s-2 boundary-value),
 boundary-3 : decimal18-mul(short-twap-s-3 boundary-value),
 boundary-4 : decimal18-mul(short-twap-s-4 boundary-value),
-boundary-5 : decimal18-mul(short-twap-s-5 boundary-value);
+boundary-5 : decimal18-mul(short-twap-s-5 boundary-value),
 
-
-
-#calculate-distances-0
+/*calulate distances*/
 /* we want to do long-twap-s minus long-twap-l but no neg numbers*/
 tcheck: greater-than(long-twap-s long-twap-l ), /*returns 0 if sub will make negative */
 trend-distance:if(is-zero(tcheck) decimal18-sub(long-twap-l long-twap-s) decimal18-sub(long-twap-s long-twap-l)), /* if it will make it negative we want to switch it around */
@@ -84,29 +89,29 @@ pneg-bool:is-zero(pcheck), /*value of 1 means it is negative */
 /*checking how we need to handle the sub*/
 both-pos:is-zero(int-add(tneg-bool pneg-bool)),
 both-neg: equal-to(int-add(tneg-bool pneg-bool) 2),
-first-neg: every(tneg-bool is-zero(pneg-bool),
+first-neg: every(tneg-bool is-zero(pneg-bool)),
 first-pos: every(is-zero(tneg-bool) pneg-bool),
 which-greater: greater-than(price-distance trend-distance), /* returns 1 if first is greater 0 if second */
 
 svalue:
   conditions(
-  every(both-pos which-greater) decimal18-sub(price-distance trend-distance)           /*neg bool off*/
-  every(both-pos is-zero(which-greater)) decimal18-sub(trend-distance price-distance)  /*neg bool on*/
-  every(both-neg which-greater) decimal18-sub(price-distance trend-distance)           /*neg bool on*/
-  every(both-neg is-zero(which-greater)) decimal18-sub(trend-distance price-distance)  /*neg bool off*/
-  every(first-neg which-greater) decimal18-sub(price-distance trend-distance)          /*neg bool on*/
-  every(first-neg is-zero(which-greater)) decimal18-sub(trend-distance price-distance) /*neg bool on*/
-  every(first-pos which-greater) decimal18-sub(price-distance trend-distance)          /*neg bool off*/
-  every(first-pos is-zero(which-greater) decimal18-sub(trend-distance price-distance)), /*neg bool off*/
+  every(both-pos which-greater) decimal18-sub(price-distance trend-distance)          
+  every(both-pos is-zero(which-greater)) decimal18-sub(trend-distance price-distance)  
+  every(both-neg which-greater) decimal18-sub(price-distance trend-distance)         
+  every(both-neg is-zero(which-greater)) decimal18-sub(trend-distance price-distance)  
+  every(first-neg which-greater) decimal18-sub(price-distance trend-distance)          
+  every(first-neg is-zero(which-greater)) decimal18-sub(trend-distance price-distance) 
+  every(first-pos which-greater) decimal18-sub(price-distance trend-distance)          
+  every(first-pos is-zero(which-greater)) decimal18-sub(trend-distance price-distance)), 
 
 sneg:
   any(        
-    every(both-pos is-zero(which-greater-1))   
-    every(both-neg which-greater-1)              
-    every(first-neg which-greater-1)); 
+    every(both-pos is-zero(which-greater))   
+    every(both-neg which-greater)              
+    every(first-neg which-greater)),
 
 
-#calculate-distances-1
+/*calculate distances 1*/
 tcheck-1: greater-than(long-twap-s-1 long-twap-l-1 ), 
 trend-distance-1:if(is-zero(tcheck-1) decimal18-sub(long-twap-l-1 long-twap-s-1) decimal18-sub(long-twap-s-1 long-twap-l-1)), 
 tneg-bool-1:is-zero(tcheck-1),
@@ -118,29 +123,29 @@ pneg-bool-1:is-zero(pcheck-1),
 /*checking how we need to handle the sub*/
 both-pos-1:is-zero(int-add(tneg-bool-1 pneg-bool-1)),
 both-neg-1: equal-to(int-add(tneg-bool-1 pneg-bool-1) 2),
-first-neg-1: every(tneg-bool-1 is-zero(pneg-bool-1),
+first-neg-1: every(tneg-bool-1 is-zero(pneg-bool-1)),
 first-pos-1: every(is-zero(tneg-bool-1) pneg-bool-1),
 which-greater-1: greater-than(price-distance-1 trend-distance-1),
 
 svalue-1:
   conditions(
     every(both-pos-1 which-greater-1) decimal18-sub(price-distance-1 trend-distance-1) 
-    every(both-pos-1 is-zero(which-greater-1) decimal18-sub(trend-distance-1 price-distance-1) 
+    every(both-pos-1 is-zero(which-greater-1)) decimal18-sub(trend-distance-1 price-distance-1) 
     every(both-neg-1 which-greater-1) decimal18-sub(price-distance-1 trend-distance-1) 
-    every(both-neg-1 is-zero(which-greater-1) decimal18-sub(trend-distance-1 price-distance-1) 
+    every(both-neg-1 is-zero(which-greater-1)) decimal18-sub(trend-distance-1 price-distance-1) 
     every(first-neg-1 which-greater-1) decimal18-sub(price-distance-1 trend-distance-1) 
-    every(first-neg-1 is-zero(which-greater-1) decimal18-sub(trend-distance-1 price-distance-1) 
+    every(first-neg-1 is-zero(which-greater-1)) decimal18-sub(trend-distance-1 price-distance-1) 
     every(first-pos-1 which-greater-1) decimal18-sub(price-distance-1 trend-distance-1)
-    every(first-pos-1 is-zero(which-greater-1) decimal18-sub(trend-distance-1 price-distance-1)),
+    every(first-pos-1 is-zero(which-greater-1)) decimal18-sub(trend-distance-1 price-distance-1)),
 
 sneg-1:
   any(
     every(both-pos-1 is-zero(which-greater-1))
     every(both-neg-1 which-greater-1)
-    every(first-neg-1 which-greater-1)); 
+    every(first-neg-1 which-greater-1)),
 
 
-#calculate-distances-2
+/* calculate distances 2 */
 tcheck-2: greater-than(long-twap-s-2 long-twap-l-2 ), 
 trend-distance-2:if(is-zero(tcheck-2) decimal18-sub(long-twap-l-2 long-twap-s-2) decimal18-sub(long-twap-s-2 long-twap-l-2)), 
 tneg-bool-2:is-zero(tcheck-2),
@@ -152,28 +157,28 @@ pneg-bool-2:is-zero(pcheck-2),
 /*checking how we need to handle the sub*/
 both-pos-2:is-zero(int-add(tneg-bool-2 pneg-bool-2)),
 both-neg-2: equal-to(int-add(tneg-bool-2 pneg-bool-2) 2),
-first-neg-2: every(tneg-bool-2 is-zero(pneg-bool-2),
+first-neg-2: every(tneg-bool-2 is-zero(pneg-bool-2)),
 first-pos-2: every(is-zero(tneg-bool-2) pneg-bool-2),
 which-greater-2: greater-than(price-distance-2 trend-distance-2),
 
 svalue-2:
   conditions(
     every(both-pos-2 which-greater-2) decimal18-sub(price-distance-2 trend-distance-2) 
-    every(both-pos-2 is-zero(which-greater-2) decimal18-sub(trend-distance-2 price-distance-2) 
+    every(both-pos-2 is-zero(which-greater-2)) decimal18-sub(trend-distance-2 price-distance-2) 
     every(both-neg-2 which-greater-2) decimal18-sub(price-distance-2 trend-distance-2) 
-    every(both-neg-2 is-zero(which-greater-2) decimal18-sub(trend-distance-2 price-distance-2) 
+    every(both-neg-2 is-zero(which-greater-2)) decimal18-sub(trend-distance-2 price-distance-2) 
     every(first-neg-2 which-greater-2) decimal18-sub(price-distance-2 trend-distance-2) 
-    every(first-neg-2 is-zero(which-greater-2) decimal18-sub(trend-distance-2 price-distance-2) 
+    every(first-neg-2 is-zero(which-greater-2)) decimal18-sub(trend-distance-2 price-distance-2) 
     every(first-pos-2 which-greater-2) decimal18-sub(price-distance-2 trend-distance-2)
-    every(first-pos-2 is-zero(which-greater-2) decimal18-sub(trend-distance-2 price-distance-2)),
+    every(first-pos-2 is-zero(which-greater-2)) decimal18-sub(trend-distance-2 price-distance-2)),
 
 sneg-2:
   any(
     every(both-pos-2 is-zero(which-greater-2))
     every(both-neg-2 which-greater-2)
-    every(first-neg-2 which-greater-2)); 
+    every(first-neg-2 which-greater-2)),
 
-#calculate-distances-3
+/* calculate distances 3 */
 tcheck-3: greater-than(long-twap-s-3 long-twap-l-3 ), 
 trend-distance-3:if(is-zero(tcheck-3) decimal18-sub(long-twap-l-3 long-twap-s-3) decimal18-sub(long-twap-s-3 long-twap-l-3)), 
 tneg-bool-3:is-zero(tcheck-3),
@@ -185,28 +190,28 @@ pneg-bool-3:is-zero(pcheck-3),
 /*checking how we need to handle the sub*/
 both-pos-3:is-zero(int-add(tneg-bool-3 pneg-bool-3)),
 both-neg-3: equal-to(int-add(tneg-bool-3 pneg-bool-3) 2),
-first-neg-3: every(tneg-bool-3 is-zero(pneg-bool-3),
+first-neg-3: every(tneg-bool-3 is-zero(pneg-bool-3)),
 first-pos-3: every(is-zero(tneg-bool-3) pneg-bool-3),
 which-greater-3: greater-than(price-distance-3 trend-distance-3),
 
 svalue-3:
   conditions(
     every(both-pos-3 which-greater-3) decimal18-sub(price-distance-3 trend-distance-3) 
-    every(both-pos-3 is-zero(which-greater-3) decimal18-sub(trend-distance-3 price-distance-3) 
+    every(both-pos-3 is-zero(which-greater-3)) decimal18-sub(trend-distance-3 price-distance-3) 
     every(both-neg-3 which-greater-3) decimal18-sub(price-distance-3 trend-distance-3) 
-    every(both-neg-3 is-zero(which-greater-3) decimal18-sub(trend-distance-3 price-distance-3) 
+    every(both-neg-3 is-zero(which-greater-3)) decimal18-sub(trend-distance-3 price-distance-3) 
     every(first-neg-3 which-greater-3) decimal18-sub(price-distance-3 trend-distance-3) 
-    every(first-neg-3 is-zero(which-greater-3) decimal18-sub(trend-distance-3 price-distance-3) 
+    every(first-neg-3 is-zero(which-greater-3)) decimal18-sub(trend-distance-3 price-distance-3) 
     every(first-pos-3 which-greater-3) decimal18-sub(price-distance-3 trend-distance-3)
-    every(first-pos-3 is-zero(which-greater-3) decimal18-sub(trend-distance-3 price-distance-3)),
+    every(first-pos-3 is-zero(which-greater-3)) decimal18-sub(trend-distance-3 price-distance-3)),
 
 sneg-3:
   any(
     every(both-pos-3 is-zero(which-greater-3))
     every(both-neg-3 which-greater-3)
-    every(first-neg-3 which-greater-3)); 
+    every(first-neg-3 which-greater-3)),
 
-#calculate-distances-4
+/* calculate distances 4 */
 tcheck-4: greater-than(long-twap-s-4 long-twap-l-4 ), 
 trend-distance-4:if(is-zero(tcheck-4) decimal18-sub(long-twap-l-4 long-twap-s-4) decimal18-sub(long-twap-s-4 long-twap-l-4)), 
 tneg-bool-4:is-zero(tcheck-4), 
@@ -218,29 +223,29 @@ pneg-bool-4:is-zero(pcheck-4),
 /*checking how we need to handle the sub*/
 both-pos-4:is-zero(int-add(tneg-bool-4 pneg-bool-4)),
 both-neg-4: equal-to(int-add(tneg-bool-4 pneg-bool-4) 2),
-first-neg-4: every(tneg-bool-4 is-zero(pneg-bool-4),
+first-neg-4: every(tneg-bool-4 is-zero(pneg-bool-4)),
 first-pos-4: every(is-zero(tneg-bool-4) pneg-bool-4),
 which-greater-4: greater-than(price-distance-4 trend-distance-4),
 
 svalue-4:
   conditions(
     every(both-pos-4 which-greater-4) decimal18-sub(price-distance-4 trend-distance-4) 
-    every(both-pos-4 is-zero(which-greater-4) decimal18-sub(trend-distance-4 price-distance-4) 
+    every(both-pos-4 is-zero(which-greater-4)) decimal18-sub(trend-distance-4 price-distance-4) 
     every(both-neg-4 which-greater-4) decimal18-sub(price-distance-4 trend-distance-4) 
-    every(both-neg-4 is-zero(which-greater-4) decimal18-sub(trend-distance-4 price-distance-4) 
+    every(both-neg-4 is-zero(which-greater-4)) decimal18-sub(trend-distance-4 price-distance-4) 
     every(first-neg-4 which-greater-4) decimal18-sub(price-distance-4 trend-distance-4) 
-    every(first-neg-4 is-zero(which-greater-4) decimal18-sub(trend-distance-4 price-distance-4) 
+    every(first-neg-4 is-zero(which-greater-4)) decimal18-sub(trend-distance-4 price-distance-4) 
     every(first-pos-4 which-greater-4) decimal18-sub(price-distance-4 trend-distance-4)
-    every(first-pos-4 is-zero(which-greater-4) decimal18-sub(trend-distance-4 price-distance-4)),
+    every(first-pos-4 is-zero(which-greater-4)) decimal18-sub(trend-distance-4 price-distance-4)),
 
 sneg-4:
   any(
     every(both-pos-4 is-zero(which-greater-4))
     every(both-neg-4 which-greater-4)
-    every(first-neg-4 which-greater-4)); 
+    every(first-neg-4 which-greater-4)),
  
 
-#calculate-distances-5
+/* calculate distances 5 */
 tcheck-5: greater-than(long-twap-s-5 long-twap-l-5 ), 
 trend-distance-5:if(is-zero(tcheck-5) decimal18-sub(long-twap-l-5 long-twap-s-5) decimal18-sub(long-twap-s-5 long-twap-l-5)), 
 tneg-bool-5:is-zero(tcheck-5),
@@ -252,51 +257,44 @@ pneg-bool-5:is-zero(pcheck-5),
 /*checking how we need to handle the sub*/
 both-pos-5:is-zero(int-add(tneg-bool-5 pneg-bool-5)),
 both-neg-5: equal-to(int-add(tneg-bool-5 pneg-bool-5) 2),
-first-neg-5: every(tneg-bool-5 is-zero(pneg-bool-5),
+first-neg-5: every(tneg-bool-5 is-zero(pneg-bool-5)),
 first-pos-5: every(is-zero(tneg-bool-5) pneg-bool-5),
 which-greater-5: greater-than(price-distance-5 trend-distance-5),
 
 svalue-5:
   conditions(
     every(both-pos-5 which-greater-5) decimal18-sub(price-distance-5 trend-distance-5) 
-    every(both-pos-5 is-zero(which-greater-5) decimal18-sub(trend-distance-5 price-distance-5) 
+    every(both-pos-5 is-zero(which-greater-5)) decimal18-sub(trend-distance-5 price-distance-5) 
     every(both-neg-5 which-greater-5) decimal18-sub(price-distance-5 trend-distance-5) 
-    every(both-neg-5 is-zero(which-greater-5) decimal18-sub(trend-distance-5 price-distance-5) 
+    every(both-neg-5 is-zero(which-greater-5)) decimal18-sub(trend-distance-5 price-distance-5) 
     every(first-neg-5 which-greater-5) decimal18-sub(price-distance-5 trend-distance-5) 
-    every(first-neg-5 is-zero(which-greater-5) decimal18-sub(trend-distance-5 price-distance-5) 
+    every(first-neg-5 is-zero(which-greater-5)) decimal18-sub(trend-distance-5 price-distance-5) 
     every(first-pos-5 which-greater-5) decimal18-sub(price-distance-5 trend-distance-5)
-    every(first-pos-5 is-zero(which-greater-5) decimal18-sub(trend-distance-5 price-distance-5)),
+    every(first-pos-5 is-zero(which-greater-5)) decimal18-sub(trend-distance-5 price-distance-5)),
 
 sneg-5:
   any(
     every(both-pos-5 is-zero(which-greater-5))
     every(both-neg-5 which-greater-5)
-    every(first-neg-5 which-greater-5)); 
+    every(first-neg-5 which-greater-5)),
 
+/*long-condition-calls*/
+lccall: call<'longcondition>(svalue sneg boundary short-twap-s short-twap-l),
+lccall-1: call<'longcondition>(svalue-1 sneg-1 boundary-1 short-twap-s short-twap-l),
+lccall-2: call<'longcondition>(svalue-2 sneg-2 boundary-2 short-twap-s short-twap-l),
+lccall-3: call<'longcondition>(svalue-3 sneg-3 boundary-3 short-twap-s short-twap-l),
+lccall-4: call<'longcondition>(svalue-4 sneg-4 boundary-4 short-twap-s short-twap-l),
+lccall-5: call<'longcondition>(svalue-5 sneg-5 boundary-5 short-twap-s short-twap-l),
 
-/* No for loops atm so use expressions, write out each twap and test */
-/* Entry Condition for opening position */
-#longcondition
-  svalue-n, sneg-n, boundary-n:,
-  result: every(greater-than(svalue-n boundary-n) greater-than(short-twap-s short-twap-l) sneg-n);
+enterlong : any(equal(lccall 1) equal(lccall-1 1) equal(lccall-2 1) equal(lccall-3 1) equal(lccall-4 1) equal(lccall-5 1)),
 
-#long-condition-calls
-lccall: call<'longcondition>(svalue sneg boundary),
-lccall-1: call<'longcondition>(svalue-1 sneg-1 boundary-1),
-lccall-2: call<'longcondition>(svalue-2 sneg-2 boundary-2),
-lccall-3: call<'longcondition>(svalue-3 sneg-3 boundary-3),
-lccall-4: call<'longcondition>(svalue-4 sneg-4 boundary-4),
-lccall-5: call<'longcondition>(svalue-5 sneg-5 boundary-5),
-
-enterlong : any(equal(lccall 1) equal(lccall-1 1) equal(clccall-2 1) equal(lccall-3 1) equal(lccall-4 1) equal(lccall-5 1));
-
-#memory
+/*memory*/
 is-long: 0,
 entry-price: 0,
-entry-time: ,
-sl-value: decimal18-mul(entry-price 96e16);
+entry-time: 0,
+sl-value: decimal18-mul(entry-price 96e16),
 
-#contexts
+/*context*/
 solver-input: input-token-address(),
 solver-output:  output-token-address(),
 
@@ -306,34 +304,36 @@ buycontexts:every(
   equal-to(solver-output base-token)),
 sellcontexts:every(
   equal-to(solver-input base-token)
-  equal-to(solver-output quote-token));
+  equal-to(solver-output quote-token)),
 
-#trade-conditions
+/*trade conditions*/
 long-condition: every(
-  buy-contexts
+  buycontexts
   is-zero(get(is-long)) 
-  enter-long
+  enterlong
   set(is-long 1)),
 tp-condition: every(     
-  sell-contexts
+  sellcontexts
   get(is-long) 
-  greater-than(now int-add(entry-time int-mul(second-interval 10))) !!!!!!!!!!!!!!!!!
+  greater-than(block-timestamp() int-add(entry-time int-mul(second-interval 10)))
   less-than(long-twap-s long-twap-l)
-  set(islong 0)),
+  set(is-long 0)),
 sl-condition: every(
-  sell-contexts
+  sellcontexts
   get(is-long)
   less-than(current-price sl-value)
-  set(is-long 0));
+  set(is-long 0)),
 
-#calculate-io
+/*calculate price*/
 amount:if(
-  longcondition buy-volume 
+  long-condition buy-volume 
   erc20balanceof(base-token wallet-address)),
-  
-price:if(longcondition
+
+/*calculate amount */
+price:if(long-condition
   decimal18-mul(uniswap-v3-quote-exact-output(quote-token base-token base-tokend poolfee) 101e16)
   set(entry-price uniswap-v3-quote-exact-output(quote-token base-token base-tokend poolfee) 101e16)
+  set(entry-time block-timestamp())
   if(tp-condition 
     decimal18-mul(uniswap-v3-quote-exact-output(base-token quote-token quote-tokend poolfee) 99e16)
     if(sl-condition
@@ -342,7 +342,8 @@ price:if(longcondition
 
 
 #handle-io
-  set(entry-time blocktime)!!!!!!;
+:;
+
 
 
 

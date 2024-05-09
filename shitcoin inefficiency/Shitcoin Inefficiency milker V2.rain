@@ -1,3 +1,55 @@
+tokens:
+  nst:
+    address: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb
+    decimals: 18
+    network: arbitrum-one
+  weth:
+    address: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
+    decimals: 18
+    network: arbitrum-one
+
+scenarios:
+  arbitrum-one:
+    bindings:
+      arbitrum-one-sub-parser: 0x23f77e7bc935503e437166498d7d72f2ea290e1f 0x5cf7d0a8c61c8dcc6b0ecb281df1c17264c2a517
+    scenarios:
+      sell-nst:
+        runs: 1
+        bindings:
+          base: '"NST"'
+          fquote: '"ETH"'
+      buy-nst:
+        runs: 1
+        bindings:
+          ftso-base: '"ETH"'
+          ftso-quote: '"NST"'
+
+orders:
+  sell-nst:
+    inputs:
+      - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    outputs:
+      - token: nst
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    network: flare
+  buy-nst:
+    inputs:
+      - token: nst
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    outputs:
+      - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    network: flare
+
+deployments:
+  sell-wflr:
+    scenario: sell-nst
+    order: sell-nst
+  buy-wflr:
+    scenario: buy-nst
+    order: buy-nst
+
 ---
 /* arb specific */
 /* Shitcoin Inefficiency Milker - Long only */

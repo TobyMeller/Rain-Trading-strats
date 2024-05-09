@@ -10,6 +10,9 @@ tokens:
 
 scenarios:
   arbitrum-one:
+    network: arbitrum-one
+    deployer: arbitrum-one
+    orderbook: arbitrum-one
     bindings:
       arbitrum-one-sub-parser: 0x23f77e7bc935503e437166498d7d72f2ea290e1f 0x5cf7d0a8c61c8dcc6b0ecb281df1c17264c2a517
     scenarios:
@@ -21,8 +24,8 @@ scenarios:
       buy-nst:
         runs: 1
         bindings:
-          ftso-base: '"ETH"'
-          ftso-quote: '"NST"'
+          base: '"ETH"'
+          quote: '"NST"'
 
 orders:
   sell-nst:
@@ -32,7 +35,7 @@ orders:
     outputs:
       - token: nst
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-    network: flare
+    network: arbitrum-one
   buy-nst:
     inputs:
       - token: nst
@@ -40,13 +43,13 @@ orders:
     outputs:
       - token: weth
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-    network: flare
+    network: arbitrum-one
 
 deployments:
-  sell-wflr:
+  sell-nst:
     scenario: sell-nst
     order: sell-nst
-  buy-wflr:
+  buy-nst:
     scenario: buy-nst
     order: buy-nst
 
@@ -55,12 +58,6 @@ deployments:
 /* Shitcoin Inefficiency Milker - Long only */
 /* NST example: https://www.dextools.io/app/en/arbitrum/pair-explorer/0xe24f62341d84d11078188d83ca3be118193d6389?t=1714811763171 */
 /* needs 5 mins */
-
-/* Entry Condition for opening position */
-#longcondition
-using-words-from 0x23f77e7bc935503e437166498d7d72f2ea290e1f 0x5cf7d0a8c61c8dcc6b0ecb281df1c17264c2a517
-  svalue-n sneg-n boundary-n short-twap-s short-twap-l:,
-  result: every(greater-than(svalue-n boundary-n) greater-than(short-twap-s short-twap-l) sneg-n);
 
 /* core logic */
 #calculate-io
@@ -396,6 +393,9 @@ price:if(long-condition
 #handle-io
 :;
 
-
-
+/* Entry Condition for opening position */
+#longcondition
+using-words-from 0x23f77e7bc935503e437166498d7d72f2ea290e1f 0x5cf7d0a8c61c8dcc6b0ecb281df1c17264c2a517
+  svalue-n sneg-n boundary-n short-twap-s short-twap-l:,
+  result: every(greater-than(svalue-n boundary-n) greater-than(short-twap-s short-twap-l) sneg-n);
 

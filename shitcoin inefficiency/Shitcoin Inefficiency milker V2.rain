@@ -1,3 +1,4 @@
+
 tokens:
   nst:
     address: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb
@@ -18,7 +19,7 @@ scenarios:
     deployer: arbitrum-one
     orderbook: arbitrum-one
     bindings:
-      arbitrum-one-sub-parser: 0x23f77e7bc935503e437166498d7d72f2ea290e1f 0x5cf7d0a8c61c8dcc6b0ecb281df1c17264c2a517
+      arbitrum-parser: 0x23f77e7bc935503e437166498d7d72f2ea290e1f 0x5cf7d0a8c61c8dcc6b0ecb281df1c17264c2a517
     scenarios:
      nst:
         bindings:
@@ -92,7 +93,8 @@ deployments:
 
 ---
 /* Shitcoin Inefficiency Milker - Long only */
-#arbitrum-one-sub-parser !The abritrum one subparser addresses.
+#arbitrum-parser !The abritrum one subparser addresses.
+
 #base-token !The shitcoin that is being traded.
 #quote-token !What the shitcoin is priced in USD/WETH.
 #base-tokend !number of tokens on the shit coin.
@@ -104,7 +106,7 @@ deployments:
 
 /* core logic */
 #calculate-io
-using-words-from arbitrum-one-sub-parser
+using-words-from arbitrum-parser
 
 /*obtain prices*/
 current-price : uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token base-tokend 0 1 poolfee),
@@ -429,7 +431,6 @@ price:if(long-condition
 
 /* Entry Condition for opening position */
 #longcondition
-using-words-from 0x23f77e7bc935503e437166498d7d72f2ea290e1f 0x5cf7d0a8c61c8dcc6b0ecb281df1c17264c2a517
   svalue-n sneg-n boundary-n short-twap-s short-twap-l:,
   result: every(greater-than(svalue-n boundary-n) greater-than(short-twap-s short-twap-l) sneg-n);
 

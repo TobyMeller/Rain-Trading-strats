@@ -42,13 +42,53 @@ scenarios:
           buy-volume: 1e16
           second-interval: 300  
 
-deployments:
-  nst:
-    scenario: nst
-  boop:
-    scenario: boop
-  
+orders:
+  buy-nst:
+    inputs:
+      - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    outputs:
+      - token: nst
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    network: arbitrum-one
+  sell-nst:
+    inputs:
+      - token: nst
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    outputs:
+      - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    network: arbitrum-one
+  buy-boop:
+    inputs:
+      - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    outputs:
+      - token: boop
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    network: arbitrum-one
+  sell-boop:
+    inputs:
+      - token: boop
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    outputs:
+      - token: nst
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    network: arbitrum-one
 
+deployments:
+  buy-nst:
+    scenario: nst
+    order: buy-nst
+  sell-nst:
+    scenario: nst
+    order: sell-nst
+  buy-nst:
+    scenario: boop
+    order: buy-boop
+  sell-nst:
+    scenario: boop
+    order: sell-boop
 ---
 /* Shitcoin Inefficiency Milker - Long only */
 #arbitrum-parser !The abritrum one subparser addresses.

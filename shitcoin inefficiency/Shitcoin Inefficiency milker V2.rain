@@ -4,7 +4,7 @@ tokens:
     decimals: 18
     network: arbitrum-one
   boop:
-    address: 0x13A7DeDb7169a17bE92B0E3C7C2315B46f4772B3
+    address: 0x13a7dedb7169a17be92b0e3c7c2315b46f4772b3
     decimals: 18
     network: arbitrum-one
   weth:
@@ -20,28 +20,27 @@ scenarios:
     bindings:
       arbitrum-one-sub-parser: 0x23f77e7bc935503e437166498d7d72f2ea290e1f 0x5cf7d0a8c61c8dcc6b0ecb281df1c17264c2a517
     scenarios:
-      nst:
+     nst:
         bindings:
           base-token: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb
           base-tokend: 18
           quote-token: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
           quote-tokend: 18
-          poolfee: [uniswap-v3-fee-medium]
+          poolfee: "[uniswap-v3-fee-medium]"
           boundary-value: 3e16
           buy-volume: 1e16
           second-interval: 300
-      boop:
+     boop:
         bindings:
-          base-token: 0x13A7DeDb7169a17bE92B0E3C7C2315B46f4772B3
+          base-token: 0x13a7dedb7169a17be92b0e3c7c2315b46f4772b3
           base-tokend: 18
           quote-token: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
           quote-tokend: 18
-          poolfee: [uniswap-v3-fee-high]
+          poolfee: "[uniswap-v3-fee-high]"
           boundary-value: 3e16
           buy-volume: 1e16
           second-interval: 300  
       
-
 orders:
   buy-nst:
     inputs:
@@ -75,9 +74,6 @@ orders:
       - token: nst
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
     network: arbitrum-one
-
-
-
 
 deployments:
   buy-nst:

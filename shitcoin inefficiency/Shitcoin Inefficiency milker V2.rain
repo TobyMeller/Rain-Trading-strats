@@ -3,6 +3,10 @@ tokens:
     address: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb
     decimals: 18
     network: arbitrum-one
+  boop:
+    address: 0x13A7DeDb7169a17bE92B0E3C7C2315B46f4772B3
+    decimals: 18
+    network: arbitrum-one
   weth:
     address: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
     decimals: 18
@@ -16,61 +20,95 @@ scenarios:
     bindings:
       arbitrum-one-sub-parser: 0x23f77e7bc935503e437166498d7d72f2ea290e1f 0x5cf7d0a8c61c8dcc6b0ecb281df1c17264c2a517
     scenarios:
-      sell-nst:
-        runs: 1
+      nst:
         bindings:
-          base: '"NST"'
-          fquote: '"ETH"'
-      buy-nst:
-        runs: 1
+          base-token: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb
+          base-tokend: 18
+          quote-token: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
+          quote-tokend: 18
+          poolfee: [uniswap-v3-fee-medium]
+          boundary-value: 3e16
+          buy-volume: 1e16
+          second-interval: 300
+      boop:
         bindings:
-          base: '"ETH"'
-          quote: '"NST"'
+          base-token: 0x13A7DeDb7169a17bE92B0E3C7C2315B46f4772B3
+          base-tokend: 18
+          quote-token: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
+          quote-tokend: 18
+          poolfee: [uniswap-v3-fee-high]
+          boundary-value: 3e16
+          buy-volume: 1e16
+          second-interval: 300  
+      
 
 orders:
-  sell-nst:
-    inputs:
-      - token: weth
-        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-    outputs:
-      - token: nst
-        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-    network: arbitrum-one
   buy-nst:
     inputs:
+      - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    outputs:
+      - token: nst
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    network: arbitrum-one
+  sell-nst:
+    inputs:
       - token: nst
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
     outputs:
       - token: weth
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
     network: arbitrum-one
+  buy-boop:
+    inputs:
+      - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    outputs:
+      - token: boop
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    network: arbitrum-one
+  sell-boop:
+    inputs:
+      - token: boop
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    outputs:
+      - token: nst
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    network: arbitrum-one
+
+
+
 
 deployments:
+  buy-nst:
+    scenario: nst
+    order: buy-nst
   sell-nst:
-    scenario: sell-nst
+    scenario: nst
     order: sell-nst
   buy-nst:
-    scenario: buy-nst
-    order: buy-nst
+    scenario: boop
+    order: buy-boop
+  sell-nst:
+    scenario: boop
+    order: sell-boop
+  
 
 ---
-/* arb specific */
 /* Shitcoin Inefficiency Milker - Long only */
-/* NST example: https://www.dextools.io/app/en/arbitrum/pair-explorer/0xe24f62341d84d11078188d83ca3be118193d6389?t=1714811763171 */
-/* needs 5 mins */
+#arbitrum-one-sub-parser !The abritrum one subparser addresses.
+#base-token !The shitcoin that is being traded.
+#quote-token !What the shitcoin is priced in USD/WETH.
+#base-tokend !number of tokens on the shit coin.
+#quote-tokend !number of tokens on USD/WETH.
+#poolfee !The fee on the uniswap pool.
+#boundary-value !The threshold for differences of the moving average that trigger the trade.
+#buy-volume !The amount of WETH/USD that is being traded.
+#second-interval !The amount of seconds which are used for the candel length.
 
 /* core logic */
 #calculate-io
-using-words-from 0x23f77e7bc935503e437166498d7d72f2ea290e1f 0x5cf7d0a8c61c8dcc6b0ecb281df1c17264c2a517
-wallet-address: 0x5e7e3ed619769833dbc23b21bad674d512f157ec,
-base-token: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb,    /* shitcoin */
-quote-token: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1,      /* weth */
-base-tokend: 18,
-quote-tokend: 18,
-poolfee: [uniswap-v3-fee-medium],
-boundary-value: 3e16, /*0.03*/
-buy-volume: 1e16, /* weth 0.01 */
-second-interval: 300, /*60*/
+using-words-from arbitrum-one-sub-parser
 
 /*obtain prices*/
 current-price : uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token base-tokend 0 1 poolfee),

@@ -43,59 +43,47 @@ scenarios:
           second-interval: 300  
 
 orders:
-  buy-nst:
+  nst:
+    network: arbitrum-one
+    deployer: arbitrum-one
+    orderbook: arbitrum-one
     inputs:
       - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+      - token: nst
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
     outputs:
       - token: nst
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-    network: arbitrum-one
-  sell-nst:
-    inputs:
-      - token: nst
-        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-    outputs:
       - token: weth
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-    network: arbitrum-one
-  buy-boop:
+  boop:
     inputs:
       - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+      - token: boop
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
     outputs:
       - token: boop
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-    network: arbitrum-one
-  sell-boop:
-    inputs:
-      - token: boop
-        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-    outputs:
       - token: nst
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-    network: arbitrum-one
 
 deployments:
-  buy-nst:
+  nst:
     scenario: nst
-    order: buy-nst
-  sell-nst:
-    scenario: nst
-    order: sell-nst
-  buy-nst:
+    order: nst
+  boop:
     scenario: boop
-    order: buy-boop
-  sell-nst:
-    scenario: boop
-    order: sell-boop
+    order: boop
+    
 ---
 /* Shitcoin Inefficiency Milker - Long only */
 #arbitrum-parser !The abritrum one subparser addresses.
 #base-token !The shitcoin that is being traded.
 #quote-token !What the shitcoin is priced in USD/WETH.
-#base-tokend !number of tokens on the shit coin.
-#quote-tokend !number of tokens on USD/WETH.
+#base-tokend !number of decimals on the shit coin.
+#quote-tokend !number of deicmals on USD/WETH.
 #poolfee !The fee on the uniswap pool.
 #boundary-value !The threshold for differences of the moving average that trigger the trade.
 #buy-volume !The amount of WETH/USD that is being traded.

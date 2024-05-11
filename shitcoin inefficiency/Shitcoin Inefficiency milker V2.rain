@@ -1,4 +1,3 @@
-
 tokens:
   nst:
     address: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb
@@ -395,7 +394,7 @@ sl-condition: every(
 /*calculate price*/
 amount:if(
   long-condition buy-volume 
-  erc20balanceof(base-token wallet-address)),
+  input-vault-balance-before()),
 
 /*calculate amount */
 price:if(long-condition
@@ -410,7 +409,14 @@ price:if(long-condition
 
 
 #handle-io
-:;
+/* avoid partial vault clears as it would break our ratio logic */
+:ensure(
+  equal-to(
+    output-vault-balance-before()
+    output-vault-balance-decrease()
+  )
+  "Partial clear."
+);
 
 /* Entry Condition for opening position */
 #longcondition

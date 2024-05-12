@@ -16,8 +16,8 @@ scenarios:
   arbitrum-one:
     orderbook: arbitrum-one
     bindings:
-      arbitrum-parser:  0x23F77e7Bc935503e437166498D7D72f2Ea290E1f
-      arb-uni-parser: 0x5Cf7d0a8c61c8dcC6b0ECB281dF1C17264C2A517
+      arbitrum-parser:  0x23f77e7bc935503e437166498d7d72f2ea290e1f
+      arb-uni-parser: 0x5Cf7d0a8c61c8dcC6b0ecb281df1c17264c2a517
     scenarios:
       nst:
         bindings:
@@ -67,11 +67,11 @@ orders:
 
 deployments:
   nst:
-    scenario: nst
     order: nst
+    scenario: arbitrum-one.nst
   boop:
-    scenario: boop
     order: boop
+    scenario: arbitrum-one.boop
     
 ---
 /* Shitcoin Inefficiency Milker - Long only */

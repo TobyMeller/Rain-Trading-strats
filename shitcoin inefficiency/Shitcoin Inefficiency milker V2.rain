@@ -16,8 +16,8 @@ scenarios:
   arbitrum-one:
     orderbook: arbitrum-one
     bindings:
-      arbitrum-parser:  0x23f77e7bc935503e437166498d7d72f2ea290e1f
-      arb-uni-parser: 0x5Cf7d0a8c61c8dcC6b0ecb281df1c17264c2a517
+      arbitrum-parser: 0x23F77e7Bc935503e437166498D7D72f2Ea290E1f
+      arb-uni-parser: 0x5Cf7d0a8c61c8dcC6b0ECB281dF1C17264C2A517
     scenarios:
       nst:
         bindings:
@@ -40,13 +40,14 @@ scenarios:
           buy-volume: 1e16
           second-interval: 300  
 
+
 orders:
   nst:
     orderbook: arbitrum-one
     inputs:
-      - token: weth
-        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
       - token: nst
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+      - token: weth
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
     outputs:
       - token: nst
@@ -55,28 +56,27 @@ orders:
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
   boop:
     inputs:
-      - token: weth
-        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
       - token: boop
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+      - token: weth
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
     outputs:
       - token: boop
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-      - token: nst
+      - token: weth
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
 
 deployments:
   nst:
-    order: nst
-    scenario: arbitrum-one.nst
+   scenario: arbitrum-one.nst  
+   order: nst
   boop:
-    order: boop
     scenario: arbitrum-one.boop
+    order: boop
+    
     
 ---
 /* Shitcoin Inefficiency Milker - Long only */
-#arbitrum-parser !The abritrum one subparser addresses.
-#arb-uni-parser !The uniswap parser on arb.
 #base-token !The shitcoin that is being traded.
 #quote-token !What the shitcoin is priced in USD/WETH.
 #base-tokend !number of decimals on the shit coin.
@@ -90,7 +90,7 @@ deployments:
 #calculate-io
 using-words-from arbitrum-parser arb-uni-parser
 
-/*obtain prices*/
+/* obtain prices*/
 current-price : uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token base-tokend 0 1 poolfee),
 /* 0 */
 long-twap-l: uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token base-tokend int-mul(0 second-interval) int-mul(10 second-interval) poolfee),

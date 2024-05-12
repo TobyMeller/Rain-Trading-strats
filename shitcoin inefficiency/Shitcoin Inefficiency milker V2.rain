@@ -77,6 +77,8 @@ deployments:
     
 ---
 /* Shitcoin Inefficiency Milker - Long only */
+#arbitrum-parser !The parsers for arb.
+#arb-uni-parser !Uniswap words for arb.
 #base-token !The shitcoin that is being traded.
 #quote-token !What the shitcoin is priced in USD/WETH.
 #base-tokend !number of decimals on the shit coin.
@@ -87,8 +89,8 @@ deployments:
 #second-interval !The amount of seconds which are used for the candel length.
 
 /* core logic */
-#calculate-io
-using-words-from arbitrum-parser arb-uni-parser
+#calculate-io 
+using-words-from arbitrum-parser arb-uni-parser 
 
 /* obtain prices*/
 current-price : uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token base-tokend 0 1 poolfee),

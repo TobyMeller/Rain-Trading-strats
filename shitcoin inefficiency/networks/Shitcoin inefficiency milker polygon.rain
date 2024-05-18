@@ -1,78 +1,82 @@
 tokens:
-  nst:
-    address: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb
+  fire:
+    address: 0x838c9634de6590b96aeadc4bc6db5c28fd17e3c2
     decimals: 18
-    network: arbitrum-one
-  boop:
-    address: 0x13a7dedb7169a17be92b0e3c7c2315b46f4772b3
+    network: polygon
+  geod:
+    address: 0xac0f66379a6d7801d7726d5a943356a172549adb
     decimals: 18
-    network: arbitrum-one
-  weth:
-    address: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
+    network: polygon
+  usdt:
+    address: 0xc2132D05D31c914a87C6611C10748AEb04B58e8F
     decimals: 18
-    network: arbitrum-one
+    network: polygon
+  usdc:
+    address: 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174
+    decimals: 18
+    network: polygon
 
 scenarios:
-  arbitrum-one:
-    orderbook: arbitrum-one
+  polygon:
+    orderbook: polygon
     bindings:
-      arbitrum-parser: 0x23F77e7Bc935503e437166498D7D72f2Ea290E1f
-      arb-uni-parser: 0x5Cf7d0a8c61c8dcC6b0ECB281dF1C17264C2A517
+      polygon-parser: 0x1fA67aEe8BB29B3144ebAAECe51Fce06BF903929
+      polygon-uni-parser: 0xb1d6D10561D4e1792A7c6B336b0529e4bFb5Ea8F
     scenarios:
-      nst:
+      fire:
         bindings:
-          base-token: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb
+          base-token: 0x838c9634de6590b96aeadc4bc6db5c28fd17e3c2
           base-tokend: 18
-          quote-token: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
+          quote-token: 0xc2132D05D31c914a87C6611C10748AEb04B58e8F
           quote-tokend: 18
           poolfee: "[uniswap-v3-fee-medium]"
-          boundary-value: 3e16
+          boundary-value: 1e16
           buy-volume: 1e16
           second-interval: 300
-      boop:
+      geod:
         bindings:
-          base-token: 0x13a7dedb7169a17be92b0e3c7c2315b46f4772b3
+          base-token: 0xac0f66379a6d7801d7726d5a943356a172549adb
           base-tokend: 18
-          quote-token: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
+          quote-token: 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174
           quote-tokend: 18
-          poolfee: "[uniswap-v3-fee-high]"
-          boundary-value: 3e16
+          poolfee: "[uniswap-v3-fee-medium]"
+          boundary-value: 1e16
           buy-volume: 1e16
           second-interval: 300  
 
 
 orders:
-  nst:
-    orderbook: arbitrum-one
+  fire:
+    orderbook: polygon
     inputs:
-      - token: nst
+      - token: fire
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-      - token: weth
+      - token: usdt
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
     outputs:
-      - token: nst
+      - token: fire
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-      - token: weth
+      - token: usdt
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-  boop:
+  geod:
     inputs:
-      - token: boop
+      - token: geod
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-      - token: weth
+      - token: usdc
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
     outputs:
-      - token: boop
+      - token: geod
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-      - token: weth
+      - token: usdc
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
 
 deployments:
-  nst:
-   scenario: arbitrum-one.nst  
-   order: nst
+  fire:
+   scenario: polygon.fire  
+   order: fire
   boop:
-    scenario: arbitrum-one.boop
-    order: boop
+    scenario: polygon.geod
+    order: geod
     
     
 ---

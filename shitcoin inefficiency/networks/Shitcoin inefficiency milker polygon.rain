@@ -47,7 +47,6 @@ scenarios:
 
 orders:
   fire:
-    orderbook: polygon
     inputs:
       - token: fire
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
@@ -58,6 +57,7 @@ orders:
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
       - token: usdt
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    network: polygon
   geod:
     inputs:
       - token: geod
@@ -69,6 +69,7 @@ orders:
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
       - token: usdc
         vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    network: polygon
 
 deployments:
   fire:
@@ -78,11 +79,10 @@ deployments:
     scenario: polygon.geod
     order: geod
     
-    
 ---
 /* Shitcoin Inefficiency Milker - Long only */
-#arbitrum-parser !The parsers for arb.
-#arb-uni-parser !Uniswap words for arb.
+#polygon-parser !The parsers for arb.
+#polygon-uni-parser !Uniswap words for arb.
 #base-token !The shitcoin that is being traded.
 #quote-token !What the shitcoin is priced in USD/WETH.
 #base-tokend !number of decimals on the shit coin.
@@ -94,7 +94,7 @@ deployments:
 
 /* core logic */
 #calculate-io 
-using-words-from arbitrum-parser arb-uni-parser 
+using-words-from polygon-parser polygon-uni-parser
 
 /* obtain prices*/
 current-price : uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token base-tokend 0 1 poolfee),

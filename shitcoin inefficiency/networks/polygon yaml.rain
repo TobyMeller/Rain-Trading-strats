@@ -96,7 +96,7 @@ deployments:
 
 /* core logic */
 #calculate-io 
-using-words-from 0x1fA67aEe8BB29B3144ebAAECe51Fce06BF903929 0xb1d6D10561D4e1792A7c6B336b0529e4bFb5Ea8F
+using-words-from polygon-parser polygon-uni-parser
 
 /* obtain prices*/
 current-price : uniswap-v3-twap-output-ratio(quote-token quote-tokend base-token base-tokend 0 1 poolfee),

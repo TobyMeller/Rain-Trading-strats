@@ -1,0 +1,423 @@
+tokens:
+  nst:
+    address: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb
+    decimals: 18
+    network: arbitrum-one
+  boop:
+    address: 0x13a7dedb7169a17be92b0e3c7c2315b46f4772b3
+    decimals: 18
+    network: arbitrum-one
+  weth:
+    address: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
+    decimals: 18
+    network: arbitrum-one
+
+scenarios:
+  arbitrum-one:
+    orderbook: arbitrum-one
+    bindings:
+      arbitrum-parser: 0x23F77e7Bc935503e437166498D7D72f2Ea290E1f
+      arb-uni-parser: 0x5Cf7d0a8c61c8dcC6b0ECB281dF1C17264C2A517
+    scenarios:
+      nst:
+        bindings:
+          base-token: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb
+          quote-token: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
+          poolfee: "[uniswap-v3-fee-medium]"
+          boundary-value: 0.03
+          buy-volume: 0.01
+          second-interval: 300
+      boop:
+        bindings:
+          base-token: 0x13a7dedb7169a17be92b0e3c7c2315b46f4772b3
+          quote-token: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
+          poolfee: "[uniswap-v3-fee-high]"
+          boundary-value: 0.03
+          buy-volume: 0.01
+          second-interval: 300  
+
+
+orders:
+  nst:
+    orderbook: arbitrum-one
+    inputs:
+      - token: nst
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+      - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    outputs:
+      - token: nst
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+      - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+  boop:
+    inputs:
+      - token: boop
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+      - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    outputs:
+      - token: boop
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+      - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+
+deployments:
+  nst:
+   scenario: arbitrum-one.nst  
+   order: nst
+  boop:
+    scenario: arbitrum-one.boop
+    order: boop
+    
+    
+---
+/* Shitcoin Inefficiency Milker - Long only */
+#arbitrum-parser !The parsers for arb.
+#arb-uni-parser !Uniswap words for arb.
+#base-token !The shitcoin that is being traded.
+#quote-token !What the shitcoin is priced in USD/WETH.
+#base-tokend !number of decimals on the shit coin.
+#quote-tokend !number of deicmals on USD/WETH.
+#poolfee !The fee on the uniswap pool.
+#boundary-value !The threshold for differences of the moving average that trigger the trade.
+#buy-volume !The amount of WETH/USD that is being traded.
+#second-interval !The amount of seconds which are used for the candel length.
+
+/* core logic */
+#calculate-io 
+using-words-from arbitrum-parser arb-uni-parser 
+
+/* obtain prices */
+current-price: uniswap-v3-twap-output-ratio(quote-token base-token 0 1 poolfee),
+/* 0 */
+long-twap-l: uniswap-v3-twap-output-ratio(quote-token base-token mul(0 second-interval) mul(10 second-interval) poolfee),
+long-twap-s: uniswap-v3-twap-output-ratio(quote-token base-token mul(0 second-interval) mul(5 second-interval) poolfee),
+short-twap-l: uniswap-v3-twap-output-ratio(quote-token base-token mul(0 second-interval) mul(2 second-interval) poolfee),
+short-twap-s: uniswap-v3-twap-output-ratio(quote-token base-token mul(0 second-interval) mul(1 second-interval) poolfee),
+/* 1 */
+long-twap-l-1: uniswap-v3-twap-output-ratio(quote-token base-token mul(1 second-interval) mul(11 second-interval) poolfee),
+long-twap-s-1: uniswap-v3-twap-output-ratio(quote-token base-token mul(1 second-interval) mul(6 second-interval) poolfee),
+short-twap-s-1: uniswap-v3-twap-output-ratio(quote-token base-token mul(1 second-interval) mul(2 second-interval) poolfee),
+/* 2 */
+long-twap-l-2: uniswap-v3-twap-output-ratio(quote-token base-token mul(2 second-interval) mul(12 second-interval) poolfee),
+long-twap-s-2: uniswap-v3-twap-output-ratio(quote-token base-token mul(2 second-interval) mul(7 second-interval) poolfee),
+short-twap-s-2: uniswap-v3-twap-output-ratio(quote-token base-token mul(2 second-interval) mul(3 second-interval) poolfee),
+/* 3 */
+long-twap-l-3: uniswap-v3-twap-output-ratio(quote-token base-token mul(3 second-interval) mul(13 second-interval) poolfee),
+long-twap-s-3: uniswap-v3-twap-output-ratio(quote-token base-token mul(3 second-interval) mul(8 second-interval) poolfee),
+short-twap-s-3: uniswap-v3-twap-output-ratio(quote-token base-token mul(3 second-interval) mul(4 second-interval) poolfee),
+/* 4 */
+long-twap-l-4: uniswap-v3-twap-output-ratio(quote-token base-token mul(4 second-interval) mul(14 second-interval) poolfee),
+long-twap-s-4: uniswap-v3-twap-output-ratio(quote-token base-token mul(4 second-interval) mul(9 second-interval) poolfee),
+short-twap-s-4: uniswap-v3-twap-output-ratio(quote-token base-token mul(4 second-interval) mul(5 second-interval) poolfee),
+/* 5 */
+long-twap-l-5: uniswap-v3-twap-output-ratio(quote-token base-token mul(5 second-interval) mul(15 second-interval) poolfee),
+long-twap-s-5: uniswap-v3-twap-output-ratio(quote-token base-token mul(5 second-interval) mul(10 second-interval) poolfee),
+short-twap-s-5: uniswap-v3-twap-output-ratio(quote-token base-token mul(5 second-interval) mul(6 second-interval) poolfee),
+
+
+/* obtain boundaries */
+boundary : mul(short-twap-s boundary-value),
+boundary-1 : mul(short-twap-s-1 boundary-value),
+boundary-2 : mul(short-twap-s-2 boundary-value),
+boundary-3 : mul(short-twap-s-3 boundary-value),
+boundary-4 : mul(short-twap-s-4 boundary-value),
+boundary-5 : mul(short-twap-s-5 boundary-value),
+
+/* calculate distances */
+/* we want to do long-twap-s minus long-twap-l but no neg numbers */
+tcheck: greater-than(long-twap-s long-twap-l), /* returns 0 if sub will make negative */
+trend-distance: if(is-zero(tcheck) sub(long-twap-l long-twap-s) sub(long-twap-s long-twap-l)), /* if it will make it negative we want to switch it around */
+tneg-bool: is-zero(tcheck), /* value of 1 means it is negative */
+
+pcheck: greater-than(long-twap-s long-twap-l), /* returns 0 if sub will make negative */
+price-distance: if(is-zero(pcheck) sub(long-twap-l short-twap-s) sub(short-twap-s long-twap-l)), /* if it will make it negative we want to switch it around */
+pneg-bool: is-zero(pcheck), /* value of 1 means it is negative */
+
+/* if both are + or - you remove the value of the what is getting taken away ignoring signs */
+/* if one is - and one is + you add the value of what is getting taken away ignoring signs */
+/* there are 8 different scenarios */
+/* price-distance - trend-distance */
+/* both positive */
+/*  (8) - (2) = 6  */
+/*  (2) - (8) = -6  */
+/* both negative */
+/*  (-8) - (-2) = (-6)  */
+/*  (-2) - (-8) = (6)  */
+/* first negative and second positive */
+/*  (-8) - (2) = (-10)  */
+/*  (-2) - (8) = (-10)  */
+/* first positive and second negative */
+/*  (8) - (-2) = 10  */
+/*  (2) - (-8) = 10  */
+
+/* checking how we need to handle the sub */
+both-pos: is-zero(add(tneg-bool pneg-bool)),
+both-neg: equal-to(add(tneg-bool pneg-bool) 2),
+first-neg: every(tneg-bool is-zero(pneg-bool)),
+first-pos: every(is-zero(tneg-bool) pneg-bool),
+which-greater: greater-than(price-distance trend-distance), /* returns 1 if first is greater 0 if second */
+
+svalue:
+  conditions(
+  every(both-pos which-greater) sub(price-distance trend-distance)          
+  every(both-pos is-zero(which-greater)) sub(trend-distance price-distance)  
+  every(both-neg which-greater) sub(price-distance trend-distance)         
+  every(both-neg is-zero(which-greater)) sub(trend-distance price-distance)  
+  every(first-neg which-greater) sub(price-distance trend-distance)          
+  every(first-neg is-zero(which-greater)) sub(trend-distance price-distance) 
+  every(first-pos which-greater) sub(price-distance trend-distance)          
+  every(first-pos is-zero(which-greater)) sub(trend-distance price-distance)), 
+
+sneg:
+  any(        
+    every(both-pos is-zero(which-greater))   
+    every(both-neg which-greater)              
+    every(first-neg which-greater)),
+
+/* calculate distances 1 */
+tcheck-1: greater-than(long-twap-s-1 long-twap-l-1), 
+trend-distance-1: if(is-zero(tcheck-1) sub(long-twap-l-1 long-twap-s-1) sub(long-twap-s-1 long-twap-l-1)), 
+tneg-bool-1: is-zero(tcheck-1),
+
+pcheck-1: greater-than(long-twap-s-1 long-twap-l-1), 
+price-distance-1: if(equal-to(pcheck-1 0) sub(long-twap-l-1 short-twap-s-1) sub(short-twap-s-1 long-twap-l-1)), 
+pneg-bool-1: is-zero(pcheck-1),
+
+/* checking how we need to handle the sub */
+both-pos-1: is-zero(add(tneg-bool-1 pneg-bool-1)),
+both-neg-1: equal-to(add(tneg-bool-1 pneg-bool-1) 2),
+first-neg-1: every(tneg-bool-1 is-zero(pneg-bool-1)),
+first-pos-1: every(is-zero(tneg-bool-1) pneg-bool-1),
+which-greater-1: greater-than(price-distance-1 trend-distance-1),
+
+svalue-1:
+  conditions(
+    every(both-pos-1 which-greater-1) sub(price-distance-1 trend-distance-1)
+    every(both-pos-1 is-zero(which-greater-1)) sub(trend-distance-1 price-distance-1)
+    every(both-neg-1 which-greater-1) sub(price-distance-1 trend-distance-1)
+    every(both-neg-1 is-zero(which-greater-1)) sub(trend-distance-1 price-distance-1)
+    every(first-neg-1 which-greater-1) sub(price-distance-1 trend-distance-1)
+    every(first-neg-1 is-zero(which-greater-1)) sub(trend-distance-1 price-distance-1)
+    every(first-pos-1 which-greater-1) sub(price-distance-1 trend-distance-1)
+    every(first-pos-1 is-zero(which-greater-1)) sub(trend-distance-1 price-distance-1)),
+
+sneg-1:
+  any(
+    every(both-pos-1 is-zero(which-greater-1))
+    every(both-neg-1 which-greater-1)
+    every(first-neg-1 which-greater-1)),
+
+
+
+/* calculate distances 2 */
+tcheck-2: greater-than(long-twap-s-2 long-twap-l-2), 
+trend-distance-2: if(is-zero(tcheck-2) sub(long-twap-l-2 long-twap-s-2) sub(long-twap-s-2 long-twap-l-2)), 
+tneg-bool-2: is-zero(tcheck-2),
+
+pcheck-2: greater-than(long-twap-s-2 long-twap-l-2), 
+price-distance-2: if(equal-to(pcheck-2 0) sub(long-twap-l-2 short-twap-s-2) sub(short-twap-s-2 long-twap-l-2)), 
+pneg-bool-2: is-zero(pcheck-2),
+
+/* checking how we need to handle the sub */
+both-pos-2: is-zero(add(tneg-bool-2 pneg-bool-2)),
+both-neg-2: equal-to(add(tneg-bool-2 pneg-bool-2) 2),
+first-neg-2: every(tneg-bool-2 is-zero(pneg-bool-2)),
+first-pos-2: every(is-zero(tneg-bool-2) pneg-bool-2),
+which-greater-2: greater-than(price-distance-2 trend-distance-2),
+
+svalue-2:
+  conditions(
+    every(both-pos-2 which-greater-2) sub(price-distance-2 trend-distance-2)
+    every(both-pos-2 is-zero(which-greater-2)) sub(trend-distance-2 price-distance-2)
+    every(both-neg-2 which-greater-2) sub(price-distance-2 trend-distance-2)
+    every(both-neg-2 is-zero(which-greater-2)) sub(trend-distance-2 price-distance-2)
+    every(first-neg-2 which-greater-2) sub(price-distance-2 trend-distance-2)
+    every(first-neg-2 is-zero(which-greater-2)) sub(trend-distance-2 price-distance-2)
+    every(first-pos-2 which-greater-2) sub(price-distance-2 trend-distance-2)
+    every(first-pos-2 is-zero(which-greater-2)) sub(trend-distance-2 price-distance-2)),
+
+sneg-2:
+  any(
+    every(both-pos-2 is-zero(which-greater-2))
+    every(both-neg-2 which-greater-2)
+    every(first-neg-2 which-greater-2)),
+
+
+/* calculate distances 3 */
+tcheck-3: greater-than(long-twap-s-3 long-twap-l-3), 
+trend-distance-3: if(is-zero(tcheck-3) sub(long-twap-l-3 long-twap-s-3) sub(long-twap-s-3 long-twap-l-3)), 
+tneg-bool-3: is-zero(tcheck-3),
+
+pcheck-3: greater-than(long-twap-s-3 long-twap-l-3), 
+price-distance-3: if(equal-to(pcheck-3 0) sub(long-twap-l-3 short-twap-s-3) sub(short-twap-s-3 long-twap-l-3)), 
+pneg-bool-3: is-zero(pcheck-3), 
+
+/* checking how we need to handle the sub */
+both-pos-3: is-zero(add(tneg-bool-3 pneg-bool-3)),
+both-neg-3: equal-to(add(tneg-bool-3 pneg-bool-3) 2),
+first-neg-3: every(tneg-bool-3 is-zero(pneg-bool-3)),
+first-pos-3: every(is-zero(tneg-bool-3) pneg-bool-3),
+which-greater-3: greater-than(price-distance-3 trend-distance-3),
+
+svalue-3:
+  conditions(
+    every(both-pos-3 which-greater-3) sub(price-distance-3 trend-distance-3)
+    every(both-pos-3 is-zero(which-greater-3)) sub(trend-distance-3 price-distance-3)
+    every(both-neg-3 which-greater-3) sub(price-distance-3 trend-distance-3)
+    every(both-neg-3 is-zero(which-greater-3)) sub(trend-distance-3 price-distance-3)
+    every(first-neg-3 which-greater-3) sub(price-distance-3 trend-distance-3)
+    every(first-neg-3 is-zero(which-greater-3)) sub(trend-distance-3 price-distance-3)
+    every(first-pos-3 which-greater-3) sub(price-distance-3 trend-distance-3)
+    every(first-pos-3 is-zero(which-greater-3)) sub(trend-distance-3 price-distance-3)),
+
+sneg-3:
+  any(
+    every(both-pos-3 is-zero(which-greater-3))
+    every(both-neg-3 which-greater-3)
+    every(first-neg-3 which-greater-3)),
+
+/* calculate distances 4 */
+tcheck-4: greater-than(long-twap-s-4 long-twap-l-4), 
+trend-distance-4: if(is-zero(tcheck-4) sub(long-twap-l-4 long-twap-s-4) sub(long-twap-s-4 long-twap-l-4)), 
+tneg-bool-4: is-zero(tcheck-4), 
+
+pcheck-4: greater-than(long-twap-s-4 long-twap-l-4), 
+price-distance-4: if(equal-to(pcheck-4 0) sub(long-twap-l-4 short-twap-s-4) sub(short-twap-s-4 long-twap-l-4)), 
+pneg-bool-4: is-zero(pcheck-4),
+
+/* checking how we need to handle the sub */
+both-pos-4: is-zero(add(tneg-bool-4 pneg-bool-4)),
+both-neg-4: equal-to(add(tneg-bool-4 pneg-bool-4) 2),
+first-neg-4: every(tneg-bool-4 is-zero(pneg-bool-4)),
+first-pos-4: every(is-zero(tneg-bool-4) pneg-bool-4),
+which-greater-4: greater-than(price-distance-4 trend-distance-4),
+
+svalue-4:
+  conditions(
+    every(both-pos-4 which-greater-4) sub(price-distance-4 trend-distance-4)
+    every(both-pos-4 is-zero(which-greater-4)) sub(trend-distance-4 price-distance-4)
+    every(both-neg-4 which-greater-4) sub(price-distance-4 trend-distance-4)
+    every(both-neg-4 is-zero(which-greater-4)) sub(trend-distance-4 price-distance-4)
+    every(first-neg-4 which-greater-4) sub(price-distance-4 trend-distance-4)
+    every(first-neg-4 is-zero(which-greater-4)) sub(trend-distance-4 price-distance-4)
+    every(first-pos-4 which-greater-4) sub(price-distance-4 trend-distance-4)
+    every(first-pos-4 is-zero(which-greater-4)) sub(trend-distance-4 price-distance-4)),
+
+sneg-4:
+  any(
+    every(both-pos-4 is-zero(which-greater-4))
+    every(both-neg-4 which-greater-4)
+    every(first-neg-4 which-greater-4)),
+
+/* calculate distances 5 */
+tcheck-5: greater-than(long-twap-s-5 long-twap-l-5), 
+trend-distance-5: if(is-zero(tcheck-5) sub(long-twap-l-5 long-twap-s-5) sub(long-twap-s-5 long-twap-l-5)), 
+tneg-bool-5: is-zero(tcheck-5),
+
+pcheck-5: greater-than(long-twap-s-5 long-twap-l-5), 
+price-distance-5: if(equal-to(pcheck-5 0) sub(long-twap-l-5 short-twap-s-5) sub(short-twap-s-5 long-twap-l-5)), 
+pneg-bool-5: is-zero(pcheck-5),
+
+/* checking how we need to handle the sub */
+both-pos-5: is-zero(add(tneg-bool-5 pneg-bool-5)),
+both-neg-5: equal-to(add(tneg-bool-5 pneg-bool-5) 2),
+first-neg-5: every(tneg-bool-5 is-zero(pneg-bool-5)),
+first-pos-5: every(is-zero(tneg-bool-5) pneg-bool-5),
+which-greater-5: greater-than(price-distance-5 trend-distance-5),
+
+svalue-5:
+  conditions(
+    every(both-pos-5 which-greater-5) sub(price-distance-5 trend-distance-5) 
+    every(both-pos-5 is-zero(which-greater-5)) sub(trend-distance-5 price-distance-5) 
+    every(both-neg-5 which-greater-5) sub(price-distance-5 trend-distance-5) 
+    every(both-neg-5 is-zero(which-greater-5)) sub(trend-distance-5 price-distance-5) 
+    every(first-neg-5 which-greater-5) sub(price-distance-5 trend-distance-5) 
+    every(first-neg-5 is-zero(which-greater-5)) sub(trend-distance-5 price-distance-5) 
+    every(first-pos-5 which-greater-5) sub(price-distance-5 trend-distance-5)
+    every(first-pos-5 is-zero(which-greater-5)) sub(trend-distance-5 price-distance-5)),
+
+sneg-5:
+  any(
+    every(both-pos-5 is-zero(which-greater-5))
+    every(both-neg-5 which-greater-5)
+    every(first-neg-5 which-greater-5)),
+
+/*long-condition-calls*/
+lccall: call<'longcondition>(svalue sneg boundary short-twap-s short-twap-l),
+lccall-1: call<'longcondition>(svalue-1 sneg-1 boundary-1 short-twap-s short-twap-l),
+lccall-2: call<'longcondition>(svalue-2 sneg-2 boundary-2 short-twap-s short-twap-l),
+lccall-3: call<'longcondition>(svalue-3 sneg-3 boundary-3 short-twap-s short-twap-l),
+lccall-4: call<'longcondition>(svalue-4 sneg-4 boundary-4 short-twap-s short-twap-l),
+lccall-5: call<'longcondition>(svalue-5 sneg-5 boundary-5 short-twap-s short-twap-l),
+
+enterlong : any(equal(lccall 1) equal(lccall-1 1) equal(lccall-2 1) equal(lccall-3 1) equal(lccall-4 1) equal(lccall-5 1)),
+
+/*memory*/
+is-long: 0,
+entry-price: 0,
+entry-time: 0,
+sl-value: mul(entry-price 0.96),
+
+/*context*/
+solver-input: input-token-address(),
+solver-output:  output-token-address(),
+
+/* quote token = WETH, USDT. Base token = shitcoin */
+buycontexts:every(
+  equal-to(solver-input quote-token)
+  equal-to(solver-output base-token)),
+sellcontexts:every(
+  equal-to(solver-input base-token)
+  equal-to(solver-output quote-token)),
+
+/*trade conditions*/
+long-condition: every(
+  buycontexts
+  is-zero(get(is-long)) 
+  enterlong
+  set(is-long 1)),
+tp-condition: every(     
+  sellcontexts
+  get(is-long) 
+  greater-than(block-timestamp() add(entry-time mul(second-interval 10)))
+  less-than(long-twap-s long-twap-l)
+  set(is-long 0)),
+sl-condition: every(
+  sellcontexts
+  get(is-long)
+  less-than(current-price sl-value)
+  set(is-long 0)),
+
+/*calculate price*/
+amount:if(
+  long-condition buy-volume 
+  input-vault-balance-before()),
+
+/*calculate amount */
+price:if(long-condition
+  mul(uniswap-v3-quote-exact-output(quote-token base-token poolfee) 1.01)
+  set(entry-price uniswap-v3-quote-exact-output(quote-token base-token poolfee) 1.01)
+  set(entry-time block-timestamp())
+  if(tp-condition 
+    decimal18-mul(uniswap-v3-quote-exact-output(base-token quote-token poolfee) 0.99)
+    ensure(sl-condition decimal18-mul(uniswap-v3-quote-exact-output(base-token quote-token poolfee) 99e16)
+    )));
+
+
+#handle-io
+/* avoid partial vault clears as it would break our ratio logic */
+:ensure(
+  equal-to(
+    output-vault-balance-before()
+    output-vault-balance-decrease()
+  )
+  "Partial clear."
+);
+
+/* Entry Condition for opening position */
+#longcondition
+  svalue-n sneg-n boundary-n short-twap-s short-twap-l:,
+  result: every(greater-than(svalue-n boundary-n) greater-than(short-twap-s short-twap-l) sneg-n);
+

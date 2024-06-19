@@ -1,0 +1,225 @@
+tokens:
+  nst:
+    address: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb
+    decimals: 18
+    network: arbitrum-one
+  boop:
+    address: 0x13a7dedb7169a17be92b0e3c7c2315b46f4772b3
+    decimals: 18
+    network: arbitrum-one
+  weth:
+    address: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
+    decimals: 18
+    network: arbitrum-one
+
+scenarios:
+  arbitrum-one:
+    orderbook: arbitrum-one
+    bindings:
+      arbitrum-parser: 0x23F77e7Bc935503e437166498D7D72f2Ea290E1f
+      arb-uni-parser: 0x5Cf7d0a8c61c8dcC6b0ECB281dF1C17264C2A517
+    scenarios:
+      nst:
+        bindings:
+          base-token: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb
+          quote-token: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
+          poolfee: "[uniswap-v3-fee-medium]"
+          boundary-value: 0.03
+          buy-volume: 0.01
+          second-interval: 300
+      boop:
+        bindings:
+          base-token: 0x13a7dedb7169a17be92b0e3c7c2315b46f4772b3
+          quote-token: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
+          poolfee: "[uniswap-v3-fee-high]"
+          boundary-value: 0.03
+          buy-volume: 0.01
+          second-interval: 300  
+
+
+orders:
+  nst:
+    orderbook: arbitrum-one
+    inputs:
+      - token: nst
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+      - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    outputs:
+      - token: nst
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+      - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+  boop:
+    inputs:
+      - token: boop
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+      - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+    outputs:
+      - token: boop
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+      - token: weth
+        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+
+deployments:
+  nst:
+   scenario: arbitrum-one.nst  
+   order: nst
+  boop:
+    scenario: arbitrum-one.boop
+    order: boop
+    
+    
+---
+/* Shitcoin Inefficiency Milker - Long only */
+#arbitrum-parser !The parsers for arb.
+#arb-uni-parser !Uniswap words for arb.
+#base-token !The shitcoin that is being traded.
+#quote-token !What the shitcoin is priced in USD/WETH.
+#base-tokend !number of decimals on the shit coin.
+#quote-tokend !number of deicmals on USD/WETH.
+#poolfee !The fee on the uniswap pool.
+#boundary-value !The threshold for differences of the moving average that trigger the trade.
+#buy-volume !The amount of WETH/USD that is being traded.
+#second-interval !The amount of seconds which are used for the candel length.
+
+/* core logic */
+#calculate-io 
+using-words-from arbitrum-parser arb-uni-parser 
+
+/* obtain prices */
+current-price: uniswap-v3-twap-output-ratio(quote-token base-token 0 1 poolfee),
+/* 0 */
+long-twap-l: uniswap-v3-twap-output-ratio(quote-token base-token mul(0 second-interval) mul(10 second-interval) poolfee),
+long-twap-s: uniswap-v3-twap-output-ratio(quote-token base-token mul(0 second-interval) mul(5 second-interval) poolfee),
+short-twap-l: uniswap-v3-twap-output-ratio(quote-token base-token mul(0 second-interval) mul(2 second-interval) poolfee),
+short-twap-s: uniswap-v3-twap-output-ratio(quote-token base-token mul(0 second-interval) mul(1 second-interval) poolfee),
+
+/* obtain boundaries */
+boundary : mul(short-twap-s boundary-value),
+
+/* calculate distances */
+/* we want to do long-twap-s minus long-twap-l but no neg numbers */
+tcheck: greater-than(long-twap-s long-twap-l), /* returns 0 if sub will make negative */
+trend-distance: if(is-zero(tcheck) sub(long-twap-l long-twap-s) sub(long-twap-s long-twap-l)), /* if it will make it negative we want to switch it around */
+tneg-bool: is-zero(tcheck), /* value of 1 means it is negative */
+
+pcheck: greater-than(long-twap-s long-twap-l), /* returns 0 if sub will make negative */
+price-distance: if(is-zero(pcheck) sub(long-twap-l short-twap-s) sub(short-twap-s long-twap-l)), /* if it will make it negative we want to switch it around */
+pneg-bool: is-zero(pcheck), /* value of 1 means it is negative */
+
+/* if both are + or - you remove the value of the what is getting taken away ignoring signs */
+/* if one is - and one is + you add the value of what is getting taken away ignoring signs */
+/* there are 8 different scenarios */
+/* price-distance - trend-distance */
+/* both positive */
+/*  (8) - (2) = 6  */
+/*  (2) - (8) = -6  */
+/* both negative */
+/*  (-8) - (-2) = (-6)  */
+/*  (-2) - (-8) = (6)  */
+/* first negative and second positive */
+/*  (-8) - (2) = (-10)  */
+/*  (-2) - (8) = (-10)  */
+/* first positive and second negative */
+/*  (8) - (-2) = 10  */
+/*  (2) - (-8) = 10  */
+
+/* checking how we need to handle the sub */
+both-pos: is-zero(add(tneg-bool pneg-bool)),
+both-neg: equal-to(add(tneg-bool pneg-bool) 2),
+first-neg: every(tneg-bool is-zero(pneg-bool)),
+first-pos: every(is-zero(tneg-bool) pneg-bool),
+which-greater: greater-than(price-distance trend-distance), /* returns 1 if first is greater 0 if second */
+
+svalue:
+  conditions(
+  every(both-pos which-greater) sub(price-distance trend-distance)          
+  every(both-pos is-zero(which-greater)) sub(trend-distance price-distance)  
+  every(both-neg which-greater) sub(price-distance trend-distance)         
+  every(both-neg is-zero(which-greater)) sub(trend-distance price-distance)  
+  every(first-neg which-greater) sub(price-distance trend-distance)          
+  every(first-neg is-zero(which-greater)) sub(trend-distance price-distance) 
+  every(first-pos which-greater) sub(price-distance trend-distance)          
+  every(first-pos is-zero(which-greater)) sub(trend-distance price-distance)), 
+
+sneg:
+  any(        
+    every(both-pos is-zero(which-greater))   
+    every(both-neg which-greater)              
+    every(first-neg which-greater)),
+
+
+/*long-condition-calls*/
+lccall: call<'longcondition>(svalue sneg boundary short-twap-s short-twap-l),
+
+enterlong : lccall,
+
+/*memory*/
+is-long: 0,
+entry-price: 0,
+entry-time: 0,
+sl-value: mul(entry-price 0.96),
+
+/*context*/
+solver-input: input-token-address(),
+solver-output:  output-token-address(),
+
+/* quote token = WETH, USDT. Base token = shitcoin */
+buycontexts:every(
+  equal-to(solver-input quote-token)
+  equal-to(solver-output base-token)),
+sellcontexts:every(
+  equal-to(solver-input base-token)
+  equal-to(solver-output quote-token)),
+
+/*trade conditions*/
+long-condition: every(
+  buycontexts
+  is-zero(get(is-long)) 
+  enterlong
+  set(is-long 1)),
+tp-condition: every(     
+  sellcontexts
+  get(is-long) 
+  greater-than(block-timestamp() add(entry-time mul(second-interval 10)))
+  less-than(long-twap-s long-twap-l)
+  set(is-long 0)),
+sl-condition: every(
+  sellcontexts
+  get(is-long)
+  less-than(current-price sl-value)
+  set(is-long 0)),
+
+/*calculate price*/
+amount:if(
+  long-condition buy-volume 
+  input-vault-balance-before()),
+
+/*calculate amount */
+price:if(long-condition
+  mul(uniswap-v3-quote-exact-output(quote-token base-token poolfee) 1.01)
+  set(entry-price uniswap-v3-quote-exact-output(quote-token base-token poolfee) 1.01)
+  set(entry-time block-timestamp())
+  if(tp-condition 
+    decimal18-mul(uniswap-v3-quote-exact-output(base-token quote-token poolfee) 0.99)
+    ensure(sl-condition decimal18-mul(uniswap-v3-quote-exact-output(base-token quote-token poolfee) 99e16)
+    )));
+
+
+#handle-io
+/* avoid partial vault clears as it would break our ratio logic */
+:ensure(
+  equal-to(
+    output-vault-balance-before()
+    output-vault-balance-decrease()
+  )
+  "Partial clear."
+);
+
+/* Entry Condition for opening position */
+#longcondition
+  svalue-n sneg-n boundary-n short-twap-s short-twap-l:,
+  result: every(greater-than(svalue-n boundary-n) greater-than(short-twap-s short-twap-l) sneg-n);
+

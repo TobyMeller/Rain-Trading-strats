@@ -1,0 +1,114 @@
+# Saves up to N most recent values from an FTSO oracle with a cooldown between each sample.
+#
+# The strat takes 0 input and offers an auction as a bounty, paying more the longer the
+# strat has been off cooldown for. This mitigates unpredictable gas costs without significantly
+# overpaying the counterparty for the service of sampling the FTSO.
+#
+# The strat intentionally does no trading itself, it merely samples data and stores it under
+# a predictable set of keys. Other strats can then be written that are read-only over these
+# keys, keeping the overall system decoupled and easy to manage. As long as the sampler
+# vault has enough WFLR in it to cover gas, there is an incentive for solvers to keep sampling
+# indefinitely every time the strat comes off cooldown.
+
+tokens:
+  eusdt:
+    network: flare
+    address: 0x96B41289D90444B8adD57e6F265DB5aE8651DF29
+    decimals: 6
+  wflr:
+    network: flare
+    address: 0x1D80c49BbBCd1C0911346656B529DF9E5c2F783d
+    decimals: 18
+
+orders:
+  flare:
+    orderbook: flare
+    # vault-id is generated on cli `openssl rand -hex 32`
+    inputs:
+      # Input is irrelevant because we always set the IO ratio to 0.
+      - token: eusdt
+        vault-id: 
+    outputs:
+      - token: wflr
+        vault-id: 
+
+scenarios:
+  flare:
+    deployer: flare
+    runs: 1
+    bindings:
+      cooldown: 300
+      bounty-start: 0.0005
+      bounty-rate: 27777777777777
+
+# There's not really anything to chart without overcomplicating the
+# strat itself in ways that would obfuscate the core lesson of the example.
+charts:
+  flare:
+
+deployments:
+  flare:
+    order: flare
+    scenario: flare
+    
+---
+#samples-count !Number of samples to collect from the FTSO.
+#cooldown !Minimum time in seconds that must elapse between samples.
+
+#bounty-start !Minimum bounty to offer for each sample in WFLR.
+#bounty-rate !Per second bounty increase.
+
+#key-0 "sample-ftso-FLR-03062024-0"
+#key-1 "sample-ftso-FLR-03062024-1"
+#key-2 "sample-ftso-FLR-03062024-2"
+#key-3 "sample-ftso-FLR-03062024-3"
+#key-4 "sample-ftso-FLR-03062024-4"
+#key-5 "sample-ftso-FLR-03062024-5"
+#key-6 "sample-ftso-FLR-03062024-6"
+#key-7 "sample-ftso-FLR-03062024-7"
+#key-8 "sample-ftso-FLR-03062024-8"
+#key-9 "sample-ftso-FLR-03062024-9"
+
+#key-10 "sample-ftso-FLR-03062024-2AV"
+#key-11 "sample-ftso-FLR-03062024-5AV"
+#key-12 "sample-ftso-FLR-03062024-10AV"
+
+#cooldown-key "sample-ftso-03062024-lut"
+
+#calculate-io
+using-words-from 0x77991674ca8887D4ee1b583DB7324B41d5f894c4 0x57c613381deadaE520eC33556C1d51c9Dcb0adb3
+
+/*Sampling price of WFLR from FTSO*/
+ftso-price: ftso-current-price-usd("FLR" 3600),
+:set(key-0 ftso-price),
+:set(key-1 get(key-0)),
+:set(key-2 get(key-1)),
+:set(key-3 get(key-2)),
+:set(key-4 get(key-3)),
+:set(key-5 get(key-4)),
+:set(key-6 get(key-5)),
+:set(key-7 get(key-6)),
+:set(key-8 get(key-7)),
+:set(key-9 get(key-8)),
+
+:set(key-10 div(add(get(key-0) get(key-1)) 2)),
+:set(key-11 div(add(get(key-0) get(key-1) get(key-2) get(key-3) get(key-4)) 5)),
+:set(key-12 div(add(get(key-0) get(key-1) get(key-2) get(key-3) get(key-4) get(key-5) get(key-6) get(key-7) get(key-8) get(key-9)) 10)),
+
+last-update-time: get(cooldown-key),
+last-update-ago: sub(block-timestamp() last-update-time),
+:ensure(greater-than-or-equal-to(last-update-ago cooldown) "Cooling down."),
+:set(cooldown-key block-timestamp()),
+
+bounty-base: linear-growth(
+  bounty-start
+  bounty-rate
+  sub(last-update-ago cooldown)),
+  
+max-bounty: 0.002,
+bounty: min(bounty-base max-bounty),
+
+io-ratio: 0;
+
+#handle-io
+:;

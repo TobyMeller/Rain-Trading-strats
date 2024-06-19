@@ -1,0 +1,189 @@
+tokens:
+  eusdt:
+    network: flare
+    address: 0x96B41289D90444B8adD57e6F265DB5aE8651DF29
+    decimals: 6
+  wflr:
+    network: flare
+    address: 0x1D80c49BbBCd1C0911346656B529DF9E5c2F783d
+    decimals: 18
+
+scenarios:
+  flare:
+    orderbook: flare
+    scenarios:
+    bindings:
+      base-token: 0x1D80c49BbBCd1C0911346656B529DF9E5c2F783d
+      quote-token: 0x96B41289D90444B8adD57e6F265DB5aE8651DF29
+      boundary-value: 0.03
+      second-interval: 300
+      buy-volume: 4
+      
+orders:
+  flare:
+    orderbook: flare
+    # vault-id is generated on cli `openssl rand -hex 32`
+    inputs:
+      - token: wflr
+        vault-id: 
+      - token: eusdt
+        vault-id: 
+    outputs:
+      - token: wflr
+        vault-id: 
+      - token: eusdt
+        vault-id: 
+
+deployments:
+  flare:
+   scenario: flare
+   order: flare
+   
+---
+/* Shitcoin Inefficiency Milker - Long only */
+#base-token !The shitcoin that is being traded.
+#quote-token !What the shitcoin is priced in USD/WETH.
+#boundary-value !The threshold for differences of the moving average that trigger the trade.
+#buy-volume !The amount of WETH/USD/WFLR that is being traded.
+#second-interval !The amount of seconds which are used for the candel length.
+
+/* core logic */
+#calculate-io 
+using-words-from 0x77991674ca8887D4ee1b583DB7324B41d5f894c4 0x57c613381deadaE520eC33556C1d51c9Dcb0adb3
+
+
+/* obtain prices */
+current-price: ftso-current-price-usd("FLR" 3600),
+/* 0 */
+long-twap-l: get("sample-ftso-FLR-04062024-10AV"),
+long-twap-s: get("sample-ftso-FLR-04062024-5AV"),
+short-twap-l: get("sample-ftso-FLR-04062024-2AV"),
+
+/* obtain boundaries */
+boundary : mul(current-price boundary-value),
+
+/* calculate distances */
+/* we want to do long-twap-s minus long-twap-l but no neg numbers */
+tcheck: greater-than(long-twap-s long-twap-l), /* returns 0 if sub will make negative */
+trend-distance: if(is-zero(tcheck) sub(long-twap-l long-twap-s) sub(long-twap-s long-twap-l)), /* if it will make it negative we want to switch it around */
+tneg-bool: is-zero(tcheck), /* value of 1 means it is negative */
+
+pcheck: greater-than(long-twap-s long-twap-l), /* returns 0 if sub will make negative */
+price-distance: if(is-zero(pcheck) sub(long-twap-l current-price) sub(current-price long-twap-l)), /* if it will make it negative we want to switch it around */
+pneg-bool: is-zero(pcheck), /* value of 1 means it is negative */
+
+/* if both are + or - you remove the value of the what is getting taken away ignoring signs */
+/* if one is - and one is + you add the value of what is getting taken away ignoring signs */
+/* there are 8 different scenarios */
+/* price-distance - trend-distance */
+/* both positive */
+/*  (8) - (2) = 6  */
+/*  (2) - (8) = -6  */
+/* both negative */
+/*  (-8) - (-2) = (-6)  */
+/*  (-2) - (-8) = (6)  */
+/* first negative and second positive */
+/*  (-8) - (2) = (-10)  */
+/*  (-2) - (8) = (-10)  */
+/* first positive and second negative */
+/*  (8) - (-2) = 10  */
+/*  (2) - (-8) = 10  */
+
+/* checking how we need to handle the sub */
+both-pos: is-zero(add(tneg-bool pneg-bool)),
+both-neg: equal-to(add(tneg-bool pneg-bool) 2),
+first-neg: every(tneg-bool is-zero(pneg-bool)),
+first-pos: every(is-zero(tneg-bool) pneg-bool),
+which-greater: greater-than(price-distance trend-distance), /* returns 1 if first is greater 0 if second */
+
+svalue:
+  conditions(
+  every(both-pos which-greater) sub(price-distance trend-distance)          
+  every(both-pos is-zero(which-greater)) sub(trend-distance price-distance)  
+  every(both-neg which-greater) sub(price-distance trend-distance)         
+  every(both-neg is-zero(which-greater)) sub(trend-distance price-distance)  
+  every(first-neg which-greater) sub(price-distance trend-distance)          
+  every(first-neg is-zero(which-greater)) sub(trend-distance price-distance) 
+  every(first-pos which-greater) sub(price-distance trend-distance)          
+  every(first-pos is-zero(which-greater)) sub(trend-distance price-distance)), 
+
+sneg:
+  any(        
+    every(both-pos is-zero(which-greater))   
+    every(both-neg which-greater)              
+    every(first-neg which-greater)),
+
+
+/*long-condition-calls*/
+lccall: call<'longcondition>(svalue sneg boundary current-price short-twap-l),
+
+enterlong : lccall,
+
+/*context*/
+solver-input: input-token-address(),
+solver-output:  output-token-address(),
+
+/* quote token = WETH, USDT. Base token = shitcoin */
+buycontexts:every(
+  equal-to(solver-input quote-token)
+  equal-to(solver-output base-token)),
+sellcontexts:every(
+  equal-to(solver-input base-token)
+  equal-to(solver-output quote-token)),
+
+/*memory*/ 
+sl-value: mul(get("entry-price-04062024") 0.96),
+
+/*trade conditions*/
+long-condition: every(
+  buycontexts
+  is-zero(get("is-long-04062024")) 
+  enterlong),
+tp-condition: every(     
+  sellcontexts
+  get("is-long-04062024") 
+  greater-than(block-timestamp() add(get("entry-time-04062024") mul(second-interval 10)))
+  less-than(long-twap-s long-twap-l)),
+sl-condition: every(
+  sellcontexts
+  get("is-long-04062024")
+  less-than(current-price sl-value)),
+
+/*entry memory*/
+:set("entry-price-04062024" if(long-condition mul(current-price 1.02) get("entry-price-04062024"))),
+:set("entry-time-04062024" if(long-condition block-timestamp() get("entry-time-04062024"))),
+  
+/* is long sets */
+:set("is-long-04062024" if(long-condition 1 get("is-long-04062024"))),
+:set("is-long-04062024" if(tp-condition 0 get("is-long-04062024"))),
+:set("is-long-04062024" if(sl-condition 0 get("is-long-04062024"))),
+
+/*calculate amount*/
+amount:if(
+  long-condition buy-volume 
+  input-vault-balance-before()),
+
+/*calculate price */
+price:if(long-condition
+  mul(current-price 1.02)
+  if(tp-condition 
+    mul(current-price 0.98)
+    ensure(sl-condition sl-value)
+    ));
+
+#handle-io
+/* avoid partial vault clears as it would break our ratio logic */
+:ensure(
+  equal-to(
+    output-vault-balance-before()
+    output-vault-balance-decrease()
+  )
+  "Partial clear."
+)
+;
+
+/* Entry Condition for opening position */
+#longcondition
+  svalue-n sneg-n boundary-n current-price short-twap-l:,
+  result: every(greater-than(svalue-n boundary-n) greater-than(current-price short-twap-l) sneg-n);
+

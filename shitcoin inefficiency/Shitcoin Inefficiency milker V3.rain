@@ -1,25 +1,42 @@
+networks:
+  polygon-mean: 
+    rpc: https://polygon-mainnet.g.alchemy.com/v2/y3BXawVv5uuP_g8BaDlKbKoTBGHo9zD9
+    chain-id: 137 
+    network-id: 137 
+    currency: MATIC
+
+subgraphs:
+  polygon-mean: https://api.thegraph.com/subgraphs/name/h20liquidity/polygon-0xc95a5f8e
+  
+orderbooks:
+  polygon-mean:
+    address: 0xc95A5f8eFe14d7a20BD2E5BAFEC4E71f8Ce0B9A6
+    network: polygon-mean
+    subgraph: polygon-mean
+
+deployers:
+  polygon-mean:
+    address: 0xB3aC858bEAf7814892d3946A8C109A7D701DF8E7
+    network: polygon-mean
+
 tokens:
-  nst:
-    address: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb
+  geod:
+    address: 0xac0f66379a6d7801d7726d5a943356a172549adb
     decimals: 18
-    network: arbitrum-one
-  boop:
-    address: 0x13a7dedb7169a17be92b0e3c7c2315b46f4772b3
-    decimals: 18
-    network: arbitrum-one
-  weth:
-    address: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
-    decimals: 18
-    network: arbitrum-one
+    network: polygon-mean
+  usdc:
+    address: 0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359
+    decimals: 6
+    network: polygon-mean
 
 scenarios:
-  arbitrum-one:
-    orderbook: arbitrum-one
+  polygob-mean:
+    orderbook: polygon-mean
     bindings:
-      arbitrum-parser: 0x23F77e7Bc935503e437166498D7D72f2Ea290E1f
-      arb-uni-parser: 0x5Cf7d0a8c61c8dcC6b0ECB281dF1C17264C2A517
+      polygon-parser: 0x8f037f2a3fF2dee510486D9C63A47A245991a4C1
+      polygon-uni-parser: 0x2382e861cF4F47578aC29B50944b3b445577aF74
     scenarios:
-      nst:
+      geod:
         bindings:
           base-token: 0x88a269df8fe7f53e590c561954c52fccc8ec0cfb
           quote-token: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
@@ -27,49 +44,27 @@ scenarios:
           boundary-value: 0.03
           buy-volume: 0.01
           second-interval: 300
-      boop:
-        bindings:
-          base-token: 0x13a7dedb7169a17be92b0e3c7c2315b46f4772b3
-          quote-token: 0x82af49447d8a07e3bd95bd0d56f35241523fbab1
-          poolfee: "[uniswap-v3-fee-high]"
-          boundary-value: 0.03
-          buy-volume: 0.01
-          second-interval: 300  
-
-
+        
 orders:
-  nst:
+  # vault-id generated with `openssl rand -hex 32`
+  geod:
     orderbook: arbitrum-one
     inputs:
-      - token: nst
-        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-      - token: weth
-        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+      - token: geod
+        vault-id: 
+      - token: usdc
+        vault-id: 
     outputs:
-      - token: nst
-        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-      - token: weth
-        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-  boop:
-    inputs:
-      - token: boop
-        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-      - token: weth
-        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-    outputs:
-      - token: boop
-        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
-      - token: weth
-        vault-id: 0x3a7f90d2f8b95fc3e5b495865eeb071a8d2a33a99874b52dce4c9d1db8017e9a
+      - token: geod
+        vault-id: 
+      - token: usdc
+        vault-id: 
 
 deployments:
-  nst:
-   scenario: arbitrum-one.nst  
-   order: nst
-  boop:
-    scenario: arbitrum-one.boop
-    order: boop
-    
+  geod:
+   scenario: polygon-mean.geod
+   order: geod
+
     
 ---
 /* Shitcoin Inefficiency Milker - Long only */
@@ -77,8 +72,6 @@ deployments:
 #arb-uni-parser !Uniswap words for arb.
 #base-token !The shitcoin that is being traded.
 #quote-token !What the shitcoin is priced in USD/WETH.
-#base-tokend !number of decimals on the shit coin.
-#quote-tokend !number of deicmals on USD/WETH.
 #poolfee !The fee on the uniswap pool.
 #boundary-value !The threshold for differences of the moving average that trigger the trade.
 #buy-volume !The amount of WETH/USD that is being traded.
@@ -86,35 +79,36 @@ deployments:
 
 /* core logic */
 #calculate-io 
-using-words-from arbitrum-parser arb-uni-parser 
+using-words-from 0x8f037f2a3fF2dee510486D9C63A47A245991a4C1 0x2382e861cF4F47578aC29B50944b3b445577aF74
 
 /* obtain prices */
-current-price: uniswap-v3-twap-output-ratio(quote-token base-token 0 1 poolfee),
-/* 0 */
-long-twap-l: uniswap-v3-twap-output-ratio(quote-token base-token mul(0 second-interval) mul(10 second-interval) poolfee),
-long-twap-s: uniswap-v3-twap-output-ratio(quote-token base-token mul(0 second-interval) mul(5 second-interval) poolfee),
-short-twap-l: uniswap-v3-twap-output-ratio(quote-token base-token mul(0 second-interval) mul(2 second-interval) poolfee),
-short-twap-s: uniswap-v3-twap-output-ratio(quote-token base-token mul(0 second-interval) mul(1 second-interval) poolfee),
+current-price: uniswap-v3-twap-output-ratio(quote-token base-token 0 0 poolfee),
+/*0*/
+long-twap-l: uniswap-v3-twap-output-ratio(quote-token base-token mul(10 second-interval) mul(0 second-interval) poolfee),
+long-twap-s: uniswap-v3-twap-output-ratio(quote-token base-token mul(5 second-interval) mul(0 second-interval) poolfee),
+short-twap-l: uniswap-v3-twap-output-ratio(quote-token base-token mul(2 second-interval) mul(0 second-interval) poolfee),
+short-twap-s: uniswap-v3-twap-output-ratio(quote-token base-token mul(1 second-interval) mul(0 second-interval) poolfee),
 /* 1 */
-long-twap-l-1: uniswap-v3-twap-output-ratio(quote-token base-token mul(1 second-interval) mul(11 second-interval) poolfee),
-long-twap-s-1: uniswap-v3-twap-output-ratio(quote-token base-token mul(1 second-interval) mul(6 second-interval) poolfee),
-short-twap-s-1: uniswap-v3-twap-output-ratio(quote-token base-token mul(1 second-interval) mul(2 second-interval) poolfee),
+long-twap-l-1: uniswap-v3-twap-output-ratio(quote-token base-token mul(11 second-interval) mul(1 second-interval) poolfee),
+long-twap-s-1: uniswap-v3-twap-output-ratio(quote-token base-token mul(6 second-interval) mul(1 second-interval) poolfee),
+short-twap-s-1: uniswap-v3-twap-output-ratio(quote-token base-token mul(2 second-interval) mul(1 second-interval) poolfee),
 /* 2 */
-long-twap-l-2: uniswap-v3-twap-output-ratio(quote-token base-token mul(2 second-interval) mul(12 second-interval) poolfee),
-long-twap-s-2: uniswap-v3-twap-output-ratio(quote-token base-token mul(2 second-interval) mul(7 second-interval) poolfee),
-short-twap-s-2: uniswap-v3-twap-output-ratio(quote-token base-token mul(2 second-interval) mul(3 second-interval) poolfee),
+long-twap-l-2: uniswap-v3-twap-output-ratio(quote-token base-token mul(12 second-interval) mul(2 second-interval) poolfee),
+long-twap-s-2: uniswap-v3-twap-output-ratio(quote-token base-token mul(7 second-interval) mul(2 second-interval) poolfee),
+short-twap-s-2: uniswap-v3-twap-output-ratio(quote-token base-token mul(3 second-interval) mul(2 second-interval) poolfee),
 /* 3 */
-long-twap-l-3: uniswap-v3-twap-output-ratio(quote-token base-token mul(3 second-interval) mul(13 second-interval) poolfee),
-long-twap-s-3: uniswap-v3-twap-output-ratio(quote-token base-token mul(3 second-interval) mul(8 second-interval) poolfee),
-short-twap-s-3: uniswap-v3-twap-output-ratio(quote-token base-token mul(3 second-interval) mul(4 second-interval) poolfee),
+long-twap-l-3: uniswap-v3-twap-output-ratio(quote-token base-token mul(13 second-interval) mul(3 second-interval) poolfee),
+long-twap-s-3: uniswap-v3-twap-output-ratio(quote-token base-token mul(8 second-interval) mul(3 second-interval) poolfee),
+short-twap-s-3: uniswap-v3-twap-output-ratio(quote-token base-token mul(4 second-interval) mul(3 second-interval) poolfee),
 /* 4 */
-long-twap-l-4: uniswap-v3-twap-output-ratio(quote-token base-token mul(4 second-interval) mul(14 second-interval) poolfee),
-long-twap-s-4: uniswap-v3-twap-output-ratio(quote-token base-token mul(4 second-interval) mul(9 second-interval) poolfee),
-short-twap-s-4: uniswap-v3-twap-output-ratio(quote-token base-token mul(4 second-interval) mul(5 second-interval) poolfee),
+long-twap-l-4: uniswap-v3-twap-output-ratio(quote-token base-token mul(14 second-interval) mul(4 second-interval) poolfee),
+long-twap-s-4: uniswap-v3-twap-output-ratio(quote-token base-token mul(9 second-interval) mul(4 second-interval) poolfee),
+short-twap-s-4: uniswap-v3-twap-output-ratio(quote-token base-token mul(5 second-interval) mul(4 second-interval) poolfee),
 /* 5 */
-long-twap-l-5: uniswap-v3-twap-output-ratio(quote-token base-token mul(5 second-interval) mul(15 second-interval) poolfee),
-long-twap-s-5: uniswap-v3-twap-output-ratio(quote-token base-token mul(5 second-interval) mul(10 second-interval) poolfee),
-short-twap-s-5: uniswap-v3-twap-output-ratio(quote-token base-token mul(5 second-interval) mul(6 second-interval) poolfee),
+long-twap-l-5: uniswap-v3-twap-output-ratio(quote-token base-token mul(15 second-interval) mul(5 second-interval) poolfee),
+long-twap-s-5: uniswap-v3-twap-output-ratio(quote-token base-token mul(10 second-interval) mul(5 second-interval) poolfee),
+short-twap-s-5: uniswap-v3-twap-output-ratio(quote-token base-token mul(6 second-interval) mul(5 second-interval) poolfee),
+
 
 
 /* obtain boundaries */
@@ -352,13 +346,7 @@ lccall-3: call<'longcondition>(svalue-3 sneg-3 boundary-3 short-twap-s short-twa
 lccall-4: call<'longcondition>(svalue-4 sneg-4 boundary-4 short-twap-s short-twap-l),
 lccall-5: call<'longcondition>(svalue-5 sneg-5 boundary-5 short-twap-s short-twap-l),
 
-enterlong : any(equal(lccall 1) equal(lccall-1 1) equal(lccall-2 1) equal(lccall-3 1) equal(lccall-4 1) equal(lccall-5 1)),
-
-/*memory*/
-is-long: 0,
-entry-price: 0,
-entry-time: 0,
-sl-value: mul(entry-price 0.96),
+enterlong : any(lccall lccall-1 lccall-2 lccall-3 lccall-4 lccall-5 1),
 
 /*context*/
 solver-input: input-token-address(),
@@ -372,38 +360,45 @@ sellcontexts:every(
   equal-to(solver-input base-token)
   equal-to(solver-output quote-token)),
 
+/*memory*/ 
+sl-value: mul(get("entry-price-20062024") 0.96),
+
 /*trade conditions*/
 long-condition: every(
   buycontexts
-  is-zero(get(is-long)) 
-  enterlong
-  set(is-long 1)),
+  is-zero(get("is-long-20062024")) 
+  enterlong),
 tp-condition: every(     
   sellcontexts
-  get(is-long) 
-  greater-than(block-timestamp() add(entry-time mul(second-interval 10)))
-  less-than(long-twap-s long-twap-l)
-  set(is-long 0)),
+  get("is-long-20062024") 
+  greater-than(block-timestamp() add(get("entry-time-20062024") mul(second-interval 10)))
+  less-than(long-twap-s long-twap-l)),
 sl-condition: every(
   sellcontexts
-  get(is-long)
-  less-than(current-price sl-value)
-  set(is-long 0)),
+  get("is-long-20062024")
+  less-than(current-price sl-value)),
 
-/*calculate price*/
+/*entry memory*/
+:set("entry-price-20062024" if(long-condition mul(current-price 1.02) get("entry-price-20062024"))),
+:set("entry-time-20062024" if(long-condition block-timestamp() get("entry-time-20062024"))),
+  
+/* is long sets */
+:set("is-long-20062024" if(long-condition 1 get("is-long-20062024"))),
+:set("is-long-20062024" if(tp-condition 0 get("is-long-20062024"))),
+:set("is-long-20062024" if(sl-condition 0 get("is-long-20062024"))),
+
+/*calculate amount*/
 amount:if(
   long-condition buy-volume 
   input-vault-balance-before()),
 
-/*calculate amount */
+/*calculate price */
 price:if(long-condition
-  mul(uniswap-v3-quote-exact-output(quote-token base-token poolfee) 1.01)
-  set(entry-price uniswap-v3-quote-exact-output(quote-token base-token poolfee) 1.01)
-  set(entry-time block-timestamp())
+  mul(current-price 1.02)
   if(tp-condition 
-    decimal18-mul(uniswap-v3-quote-exact-output(base-token quote-token poolfee) 0.99)
-    ensure(sl-condition decimal18-mul(uniswap-v3-quote-exact-output(base-token quote-token poolfee) 99e16)
-    )));
+    mul(current-price 0.98)
+    ensure(sl-condition sl-value)
+    ));
 
 
 #handle-io

@@ -30,7 +30,7 @@ tokens:
     network: polygon-mean
 
 scenarios:
-  polygob-mean:
+  polygon-mean:
     orderbook: polygon-mean
     bindings:
       polygon-parser: 0x8f037f2a3fF2dee510486D9C63A47A245991a4C1
@@ -48,7 +48,7 @@ scenarios:
 orders:
   # vault-id generated with `openssl rand -hex 32`
   geod:
-    orderbook: arbitrum-one
+    orderbook: polygon-mean
     inputs:
       - token: geod
         vault-id: 
@@ -68,8 +68,8 @@ deployments:
     
 ---
 /* Shitcoin Inefficiency Milker - Long only */
-#arbitrum-parser !The parsers for arb.
-#arb-uni-parser !Uniswap words for arb.
+#polygon-parser !The parsers for arb.
+#polygon-uni-parser !Uniswap words for arb.
 #base-token !The shitcoin that is being traded.
 #quote-token !What the shitcoin is priced in USD/WETH.
 #poolfee !The fee on the uniswap pool.
@@ -83,51 +83,50 @@ using-words-from 0x8f037f2a3fF2dee510486D9C63A47A245991a4C1 0x2382e861cF4F47578a
 
 /* obtain prices */
 current-price: uniswap-v3-twap-output-ratio(quote-token base-token 0 0 poolfee),
+two-x-average: uniswap-v3-twap-output-ratio(quote-token base-token 0 mul(2 second-interval) poolfee),
 /*0*/
-long-twap-l: uniswap-v3-twap-output-ratio(quote-token base-token mul(10 second-interval) mul(0 second-interval) poolfee),
-long-twap-s: uniswap-v3-twap-output-ratio(quote-token base-token mul(5 second-interval) mul(0 second-interval) poolfee),
-short-twap-l: uniswap-v3-twap-output-ratio(quote-token base-token mul(2 second-interval) mul(0 second-interval) poolfee),
-short-twap-s: uniswap-v3-twap-output-ratio(quote-token base-token mul(1 second-interval) mul(0 second-interval) poolfee),
+long-twap: uniswap-v3-twap-output-ratio(quote-token base-token mul(10 second-interval) mul(0 second-interval) poolfee),
+medium-twap: uniswap-v3-twap-output-ratio(quote-token base-token mul(5 second-interval) mul(0 second-interval) poolfee),
+short-twap: uniswap-v3-twap-output-ratio(quote-token base-token mul(1 second-interval) mul(0 second-interval) poolfee),
 /* 1 */
-long-twap-l-1: uniswap-v3-twap-output-ratio(quote-token base-token mul(11 second-interval) mul(1 second-interval) poolfee),
-long-twap-s-1: uniswap-v3-twap-output-ratio(quote-token base-token mul(6 second-interval) mul(1 second-interval) poolfee),
-short-twap-s-1: uniswap-v3-twap-output-ratio(quote-token base-token mul(2 second-interval) mul(1 second-interval) poolfee),
+long-twap-1: uniswap-v3-twap-output-ratio(quote-token base-token mul(11 second-interval) mul(1 second-interval) poolfee),
+medium-twap-1: uniswap-v3-twap-output-ratio(quote-token base-token mul(6 second-interval) mul(1 second-interval) poolfee),
+short-twap-1: uniswap-v3-twap-output-ratio(quote-token base-token mul(2 second-interval) mul(1 second-interval) poolfee),
 /* 2 */
-long-twap-l-2: uniswap-v3-twap-output-ratio(quote-token base-token mul(12 second-interval) mul(2 second-interval) poolfee),
-long-twap-s-2: uniswap-v3-twap-output-ratio(quote-token base-token mul(7 second-interval) mul(2 second-interval) poolfee),
-short-twap-s-2: uniswap-v3-twap-output-ratio(quote-token base-token mul(3 second-interval) mul(2 second-interval) poolfee),
+long-twap-2: uniswap-v3-twap-output-ratio(quote-token base-token mul(12 second-interval) mul(2 second-interval) poolfee),
+medium-twap-2: uniswap-v3-twap-output-ratio(quote-token base-token mul(7 second-interval) mul(2 second-interval) poolfee),
+short-twap-2: uniswap-v3-twap-output-ratio(quote-token base-token mul(3 second-interval) mul(2 second-interval) poolfee),
 /* 3 */
-long-twap-l-3: uniswap-v3-twap-output-ratio(quote-token base-token mul(13 second-interval) mul(3 second-interval) poolfee),
-long-twap-s-3: uniswap-v3-twap-output-ratio(quote-token base-token mul(8 second-interval) mul(3 second-interval) poolfee),
-short-twap-s-3: uniswap-v3-twap-output-ratio(quote-token base-token mul(4 second-interval) mul(3 second-interval) poolfee),
+long-twap-3: uniswap-v3-twap-output-ratio(quote-token base-token mul(13 second-interval) mul(3 second-interval) poolfee),
+medium-twap-3: uniswap-v3-twap-output-ratio(quote-token base-token mul(8 second-interval) mul(3 second-interval) poolfee),
+short-twap-3: uniswap-v3-twap-output-ratio(quote-token base-token mul(4 second-interval) mul(3 second-interval) poolfee),
 /* 4 */
-long-twap-l-4: uniswap-v3-twap-output-ratio(quote-token base-token mul(14 second-interval) mul(4 second-interval) poolfee),
-long-twap-s-4: uniswap-v3-twap-output-ratio(quote-token base-token mul(9 second-interval) mul(4 second-interval) poolfee),
-short-twap-s-4: uniswap-v3-twap-output-ratio(quote-token base-token mul(5 second-interval) mul(4 second-interval) poolfee),
+long-twap-4: uniswap-v3-twap-output-ratio(quote-token base-token mul(14 second-interval) mul(4 second-interval) poolfee),
+medium-twap-4: uniswap-v3-twap-output-ratio(quote-token base-token mul(9 second-interval) mul(4 second-interval) poolfee),
+short-twap-4: uniswap-v3-twap-output-ratio(quote-token base-token mul(5 second-interval) mul(4 second-interval) poolfee),
 /* 5 */
-long-twap-l-5: uniswap-v3-twap-output-ratio(quote-token base-token mul(15 second-interval) mul(5 second-interval) poolfee),
-long-twap-s-5: uniswap-v3-twap-output-ratio(quote-token base-token mul(10 second-interval) mul(5 second-interval) poolfee),
-short-twap-s-5: uniswap-v3-twap-output-ratio(quote-token base-token mul(6 second-interval) mul(5 second-interval) poolfee),
-
-
+long-twap-5: uniswap-v3-twap-output-ratio(quote-token base-token mul(15 second-interval) mul(5 second-interval) poolfee),
+medium-twap-5: uniswap-v3-twap-output-ratio(quote-token base-token mul(10 second-interval) mul(5 second-interval) poolfee),
+short-twap-5: uniswap-v3-twap-output-ratio(quote-token base-token mul(6 second-interval) mul(5 second-interval) poolfee),
 
 /* obtain boundaries */
-boundary : mul(short-twap-s boundary-value),
-boundary-1 : mul(short-twap-s-1 boundary-value),
-boundary-2 : mul(short-twap-s-2 boundary-value),
-boundary-3 : mul(short-twap-s-3 boundary-value),
-boundary-4 : mul(short-twap-s-4 boundary-value),
-boundary-5 : mul(short-twap-s-5 boundary-value),
+boundary : mul(short-twap boundary-value),
+boundary-1 : mul(short-twap-1 boundary-value),
+boundary-2 : mul(short-twap-2 boundary-value),
+boundary-3 : mul(short-twap-3 boundary-value),
+boundary-4 : mul(short-twap-4 boundary-value),
+boundary-5 : mul(short-twap-5 boundary-value),
 
 /* calculate distances */
-/* we want to do long-twap-s minus long-twap-l but no neg numbers */
-tcheck: greater-than(long-twap-s long-twap-l), /* returns 0 if sub will make negative */
-trend-distance: if(is-zero(tcheck) sub(long-twap-l long-twap-s) sub(long-twap-s long-twap-l)), /* if it will make it negative we want to switch it around */
+/* we want to do medium-twap minus long-twap but no neg numbers */
+tcheck: greater-than(medium-twap long-twap), /* returns 0 if sub will make negative */
+trend-distance: if(is-zero(tcheck) sub(long-twap medium-twap) sub(medium-twap long-twap)), /* if it will make it negative we want to switch it around */
 tneg-bool: is-zero(tcheck), /* value of 1 means it is negative */
 
-pcheck: greater-than(long-twap-s long-twap-l), /* returns 0 if sub will make negative */
-price-distance: if(is-zero(pcheck) sub(long-twap-l short-twap-s) sub(short-twap-s long-twap-l)), /* if it will make it negative we want to switch it around */
-pneg-bool: is-zero(pcheck), /* value of 1 means it is negative */
+/* we want to do short-twap minus long-twap but no neg numbers */
+pcheck: greater-than(short-twap long-twap), 
+price-distance: if(equal-to(pcheck 0) sub(long-twap short-twap) sub(short-twap long-twap)), 
+pneg-bool: is-zero(pcheck),
 
 /* if both are + or - you remove the value of the what is getting taken away ignoring signs */
 /* if one is - and one is + you add the value of what is getting taken away ignoring signs */
@@ -171,12 +170,12 @@ sneg:
     every(first-neg which-greater)),
 
 /* calculate distances 1 */
-tcheck-1: greater-than(long-twap-s-1 long-twap-l-1), 
-trend-distance-1: if(is-zero(tcheck-1) sub(long-twap-l-1 long-twap-s-1) sub(long-twap-s-1 long-twap-l-1)), 
+tcheck-1: greater-than(medium-twap-1 long-twap-1), 
+trend-distance-1: if(is-zero(tcheck-1) sub(long-twap-1 medium-twap-1) sub(medium-twap-1 long-twap-1)), 
 tneg-bool-1: is-zero(tcheck-1),
 
-pcheck-1: greater-than(long-twap-s-1 long-twap-l-1), 
-price-distance-1: if(equal-to(pcheck-1 0) sub(long-twap-l-1 short-twap-s-1) sub(short-twap-s-1 long-twap-l-1)), 
+pcheck-1: greater-than(short-twap-1 long-twap-1), 
+price-distance-1: if(equal-to(pcheck-1 0) sub(long-twap-1 short-twap-1) sub(short-twap-1 long-twap-1)), 
 pneg-bool-1: is-zero(pcheck-1),
 
 /* checking how we need to handle the sub */
@@ -206,13 +205,14 @@ sneg-1:
 
 
 /* calculate distances 2 */
-tcheck-2: greater-than(long-twap-s-2 long-twap-l-2), 
-trend-distance-2: if(is-zero(tcheck-2) sub(long-twap-l-2 long-twap-s-2) sub(long-twap-s-2 long-twap-l-2)), 
+tcheck-2: greater-than(medium-twap-2 long-twap-2), 
+trend-distance-2: if(is-zero(tcheck-2) sub(long-twap-2 medium-twap-2) sub(medium-twap-2 long-twap-2)), 
 tneg-bool-2: is-zero(tcheck-2),
 
-pcheck-2: greater-than(long-twap-s-2 long-twap-l-2), 
-price-distance-2: if(equal-to(pcheck-2 0) sub(long-twap-l-2 short-twap-s-2) sub(short-twap-s-2 long-twap-l-2)), 
+pcheck-2: greater-than(short-twap-2 long-twap-2), 
+price-distance-2: if(equal-to(pcheck-2 0) sub(long-twap-2 short-twap-2) sub(short-twap-2 long-twap-2)), 
 pneg-bool-2: is-zero(pcheck-2),
+
 
 /* checking how we need to handle the sub */
 both-pos-2: is-zero(add(tneg-bool-2 pneg-bool-2)),
@@ -240,13 +240,14 @@ sneg-2:
 
 
 /* calculate distances 3 */
-tcheck-3: greater-than(long-twap-s-3 long-twap-l-3), 
-trend-distance-3: if(is-zero(tcheck-3) sub(long-twap-l-3 long-twap-s-3) sub(long-twap-s-3 long-twap-l-3)), 
+tcheck-3: greater-than(medium-twap-3 long-twap-3), 
+trend-distance-3: if(is-zero(tcheck-3) sub(long-twap-3 medium-twap-3) sub(medium-twap-3 long-twap-3)), 
 tneg-bool-3: is-zero(tcheck-3),
 
-pcheck-3: greater-than(long-twap-s-3 long-twap-l-3), 
-price-distance-3: if(equal-to(pcheck-3 0) sub(long-twap-l-3 short-twap-s-3) sub(short-twap-s-3 long-twap-l-3)), 
-pneg-bool-3: is-zero(pcheck-3), 
+pcheck-3: greater-than(short-twap-3 long-twap-3), 
+price-distance-3: if(equal-to(pcheck-3 0) sub(long-twap-3 short-twap-3) sub(short-twap-3 long-twap-3)), 
+pneg-bool-3: is-zero(pcheck-3),
+
 
 /* checking how we need to handle the sub */
 both-pos-3: is-zero(add(tneg-bool-3 pneg-bool-3)),
@@ -273,13 +274,14 @@ sneg-3:
     every(first-neg-3 which-greater-3)),
 
 /* calculate distances 4 */
-tcheck-4: greater-than(long-twap-s-4 long-twap-l-4), 
-trend-distance-4: if(is-zero(tcheck-4) sub(long-twap-l-4 long-twap-s-4) sub(long-twap-s-4 long-twap-l-4)), 
-tneg-bool-4: is-zero(tcheck-4), 
+tcheck-4: greater-than(medium-twap-4 long-twap-4), 
+trend-distance-4: if(is-zero(tcheck-4) sub(long-twap-4 medium-twap-4) sub(medium-twap-4 long-twap-4)), 
+tneg-bool-4: is-zero(tcheck-4),
 
-pcheck-4: greater-than(long-twap-s-4 long-twap-l-4), 
-price-distance-4: if(equal-to(pcheck-4 0) sub(long-twap-l-4 short-twap-s-4) sub(short-twap-s-4 long-twap-l-4)), 
+pcheck-4: greater-than(short-twap-4 long-twap-4), 
+price-distance-4: if(equal-to(pcheck-4 0) sub(long-twap-4 short-twap-4) sub(short-twap-4 long-twap-4)), 
 pneg-bool-4: is-zero(pcheck-4),
+
 
 /* checking how we need to handle the sub */
 both-pos-4: is-zero(add(tneg-bool-4 pneg-bool-4)),
@@ -306,13 +308,14 @@ sneg-4:
     every(first-neg-4 which-greater-4)),
 
 /* calculate distances 5 */
-tcheck-5: greater-than(long-twap-s-5 long-twap-l-5), 
-trend-distance-5: if(is-zero(tcheck-5) sub(long-twap-l-5 long-twap-s-5) sub(long-twap-s-5 long-twap-l-5)), 
+tcheck-5: greater-than(medium-twap-5 long-twap-5), 
+trend-distance-5: if(is-zero(tcheck-5) sub(long-twap-5 medium-twap-5) sub(medium-twap-5 long-twap-5)), 
 tneg-bool-5: is-zero(tcheck-5),
 
-pcheck-5: greater-than(long-twap-s-5 long-twap-l-5), 
-price-distance-5: if(equal-to(pcheck-5 0) sub(long-twap-l-5 short-twap-s-5) sub(short-twap-s-5 long-twap-l-5)), 
+pcheck-5: greater-than(short-twap-5 long-twap-5), 
+price-distance-5: if(equal-to(pcheck-5 0) sub(long-twap-5 short-twap-5) sub(short-twap-5 long-twap-5)), 
 pneg-bool-5: is-zero(pcheck-5),
+
 
 /* checking how we need to handle the sub */
 both-pos-5: is-zero(add(tneg-bool-5 pneg-bool-5)),
@@ -339,12 +342,12 @@ sneg-5:
     every(first-neg-5 which-greater-5)),
 
 /*long-condition-calls*/
-lccall: call<'longcondition>(svalue sneg boundary short-twap-s short-twap-l),
-lccall-1: call<'longcondition>(svalue-1 sneg-1 boundary-1 short-twap-s short-twap-l),
-lccall-2: call<'longcondition>(svalue-2 sneg-2 boundary-2 short-twap-s short-twap-l),
-lccall-3: call<'longcondition>(svalue-3 sneg-3 boundary-3 short-twap-s short-twap-l),
-lccall-4: call<'longcondition>(svalue-4 sneg-4 boundary-4 short-twap-s short-twap-l),
-lccall-5: call<'longcondition>(svalue-5 sneg-5 boundary-5 short-twap-s short-twap-l),
+lccall: call<'longcondition>(svalue sneg boundary current-price two-x-average),
+lccall-1: call<'longcondition>(svalue-1 sneg-1 boundary-1 current-price two-x-average),
+lccall-2: call<'longcondition>(svalue-2 sneg-2 boundary-2 current-price two-x-average),
+lccall-3: call<'longcondition>(svalue-3 sneg-3 boundary-3 current-price two-x-average),
+lccall-4: call<'longcondition>(svalue-4 sneg-4 boundary-4 current-price two-x-average),
+lccall-5: call<'longcondition>(svalue-5 sneg-5 boundary-5 current-price two-x-average),
 
 enterlong : any(lccall lccall-1 lccall-2 lccall-3 lccall-4 lccall-5 1),
 
@@ -372,7 +375,7 @@ tp-condition: every(
   sellcontexts
   get("is-long-20062024") 
   greater-than(block-timestamp() add(get("entry-time-20062024") mul(second-interval 10)))
-  less-than(long-twap-s long-twap-l)),
+  less-than(medium-twap long-twap)),
 sl-condition: every(
   sellcontexts
   get("is-long-20062024")
@@ -413,6 +416,6 @@ price:if(long-condition
 
 /* Entry Condition for opening position */
 #longcondition
-  svalue-n sneg-n boundary-n short-twap-s short-twap-l:,
-  result: every(greater-than(svalue-n boundary-n) greater-than(short-twap-s short-twap-l) sneg-n);
+  svalue-n sneg-n boundary-n current-price two-x-average:,
+  result: every(greater-than(svalue-n boundary-n) greater-than(current-price two-x-average) sneg-n);
 
